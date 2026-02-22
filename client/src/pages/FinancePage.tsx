@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatUZS, todayTashkent, nowTimeTashkent, formatDateTashkent, formatTimeTashkent } from '../types'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
+import { api } from '../lib/api'
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   Search,
   Pencil,
   Trash2,
+  Lock,
 } from 'lucide-react'
 
 const INCOME_CATS = ['Xona to\'lovi', 'Qo\'shimcha xizmat', 'Restoran', 'Transfer', 'Boshqa kirim']
@@ -44,6 +46,17 @@ export default function FinancePage() {
 
   // Delete confirm
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  // Closed dates
+  const [closedDates, setClosedDates] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    api.getClosedDates().then(rows => {
+      setClosedDates(new Set(rows.map((r: any) => r.date)))
+    }).catch(() => {})
+  }, [])
+
+  const todayIsClosed = closedDates.has(todayTashkent())
 
   const [page, setPage] = useState(0)
 
@@ -140,7 +153,9 @@ export default function FinancePage() {
     }
   }
 
-  const canModify = (txAdmin: string) => {
+  const canModify = (txAdmin: string, txDate: string) => {
+    const txDay = txDate.split('T')[0]
+    if (closedDates.has(txDay)) return false
     return admin?.role === 'super_admin' || txAdmin === admin?.name
   }
 
@@ -153,12 +168,26 @@ export default function FinancePage() {
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-sm"
+          disabled={todayIsClosed}
+          className={`flex items-center gap-2 font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all text-sm ${
+            todayIsClosed
+              ? 'bg-white/[0.06] text-white/30 shadow-none cursor-not-allowed'
+              : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-amber-500/20 hover:shadow-amber-500/30'
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          Qo'shish
+          {todayIsClosed ? <Lock className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {todayIsClosed ? 'Kun yopilgan' : "Qo'shish"}
         </button>
       </div>
+
+      {todayIsClosed && (
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5">
+          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="text-xs sm:text-sm text-amber-400/80">
+            Bugungi kun yopilgan. Yangi tranzaksiya qo'shib bo'lmaydi.
+          </span>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -269,7 +298,7 @@ export default function FinancePage() {
                           <p className="text-[10px] text-white/20">
                             {formatDateTashkent(tx.date)} {formatTimeTashkent(tx.date)}
                           </p>
-                          {canModify(tx.admin) && (
+                          {canModify(tx.admin, tx.date) && (
                             <div className="flex items-center gap-0.5 sm:gap-1">
                               <button
                                 onClick={(e) => { e.stopPropagation(); openEdit(tx) }}

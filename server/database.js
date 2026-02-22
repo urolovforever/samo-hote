@@ -122,6 +122,18 @@ function initDb() {
     // Column already exists — ignore
   }
 
+  // Migration: add total_income/total_expense columns to daily_reports
+  try {
+    db.exec(`ALTER TABLE daily_reports ADD COLUMN total_income INTEGER DEFAULT 0`);
+  } catch (e) {
+    // Column already exists — ignore
+  }
+  try {
+    db.exec(`ALTER TABLE daily_reports ADD COLUMN total_expense INTEGER DEFAULT 0`);
+  } catch (e) {
+    // Column already exists — ignore
+  }
+
   db.close();
 }
 

@@ -38,6 +38,12 @@ function isValidMonth(str) {
   return /^\d{4}-\d{2}$/.test(str);
 }
 
+function isDayClosed(db, dateStr) {
+  const dateOnly = dateStr.split('T')[0];
+  const row = db.prepare('SELECT date FROM daily_reports WHERE date = ?').get(dateOnly);
+  return !!row;
+}
+
 function sanitizeString(str, maxLen = 500) {
   if (typeof str !== 'string') return '';
   return str
@@ -309,6 +315,12 @@ app.post('/api/transactions', authMiddleware, (req, res) => {
   const db = getDb();
   try {
     const txDate = date || nowLocal();
+
+    // Check if the date's day is closed
+    if (isDayClosed(db, txDate)) {
+      return res.status(403).json({ error: 'Bu kun yopilgan. Yopilgan kunga tranzaksiya qo\'shib bo\'lmaydi.' });
+    }
+
     const cleanDesc = sanitizeString(description);
     const cleanCat = sanitizeString(category, 100);
 
@@ -348,6 +360,11 @@ app.delete('/api/transactions/:id', authMiddleware, (req, res) => {
     const tx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id);
     if (!tx) return res.status(404).json({ error: 'Tranzaksiya topilmadi' });
 
+    // Check if the transaction's day is closed
+    if (isDayClosed(db, tx.date)) {
+      return res.status(403).json({ error: 'Bu kun yopilgan. Yopilgan kundagi tranzaksiyani o\'chirib bo\'lmaydi.' });
+    }
+
     // Super admin can delete any, regular admin only their own
     if (req.admin.role !== 'super_admin' && tx.admin_name !== req.admin.name) {
       return res.status(403).json({ error: 'Faqat o\'z tranzaksiyangizni o\'chira olasiz' });
@@ -382,6 +399,11 @@ app.put('/api/transactions/:id', authMiddleware, (req, res) => {
   try {
     const tx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id);
     if (!tx) return res.status(404).json({ error: 'Tranzaksiya topilmadi' });
+
+    // Check if the transaction's day is closed
+    if (isDayClosed(db, tx.date)) {
+      return res.status(403).json({ error: 'Bu kun yopilgan. Yopilgan kundagi tranzaksiyani tahrirlash mumkin emas.' });
+    }
 
     if (req.admin.role !== 'super_admin' && tx.admin_name !== req.admin.name) {
       return res.status(403).json({ error: 'Faqat o\'z tranzaksiyangizni tahrirlash mumkin' });
@@ -845,7 +867,17 @@ app.post('/api/reports/daily/:date/close', authMiddleware, (req, res) => {
   }
   const db = getDb();
   try {
-    db.prepare('INSERT OR REPLACE INTO daily_reports (date, report_text, admin_name, closed_at) VALUES (?, ?, ?, datetime(\'now\', \'localtime\'))').run(date, report_text, req.admin.name);
+    // Calculate day totals from transactions
+    const totals = db.prepare(
+      `SELECT
+        COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income,
+        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense
+       FROM transactions WHERE date(date) = ?`
+    ).get(date);
+
+    db.prepare(
+      'INSERT OR REPLACE INTO daily_reports (date, report_text, admin_name, closed_at, total_income, total_expense) VALUES (?, ?, ?, datetime(\'now\', \'localtime\'), ?, ?)'
+    ).run(date, report_text, req.admin.name, totals.total_income, totals.total_expense);
     const row = db.prepare('SELECT * FROM daily_reports WHERE date = ?').get(date);
     logActivity(db, req.admin.name, 'day_close', `Kun yopildi: ${date}`, null, null);
     res.json(row);
@@ -861,9 +893,9 @@ app.get('/api/reports/closed-dates', authMiddleware, (req, res) => {
     let rows;
     if (month) {
       if (!isValidMonth(month)) return res.status(400).json({ error: 'Noto\'g\'ri oy formati (YYYY-MM)' });
-      rows = db.prepare('SELECT date, admin_name, closed_at, report_text FROM daily_reports WHERE date LIKE ? ORDER BY date').all(month + '%');
+      rows = db.prepare('SELECT date, admin_name, closed_at, report_text, total_income, total_expense FROM daily_reports WHERE date LIKE ? ORDER BY date').all(month + '%');
     } else {
-      rows = db.prepare('SELECT date, admin_name, closed_at FROM daily_reports ORDER BY date DESC').all();
+      rows = db.prepare('SELECT date, admin_name, closed_at, total_income, total_expense FROM daily_reports ORDER BY date DESC').all();
     }
     res.json(rows);
   } finally {
