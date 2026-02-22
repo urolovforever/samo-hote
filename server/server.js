@@ -155,7 +155,7 @@ app.post('/api/auth/login', loginLimiter, (req, res) => {
 
   const db = getDb();
   try {
-    const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username);
+    const admin = db.prepare('SELECT * FROM admins WHERE username = ? AND deleted_at IS NULL').get(username);
 
     if (!admin || !bcrypt.compareSync(password, admin.password)) {
       return res.status(401).json({ error: 'Login yoki parol noto\'g\'ri' });
@@ -172,7 +172,7 @@ app.post('/api/auth/login', loginLimiter, (req, res) => {
 app.get('/api/admins', authMiddleware, superAdminMiddleware, (req, res) => {
   const db = getDb();
   try {
-    const admins = db.prepare('SELECT id, name, username, role, created_at FROM admins ORDER BY id').all();
+    const admins = db.prepare('SELECT id, name, username, role, created_at FROM admins WHERE deleted_at IS NULL ORDER BY id').all();
     res.json(admins);
   } finally {
     db.close();
@@ -215,7 +215,7 @@ app.delete('/api/admins/:id', authMiddleware, superAdminMiddleware, (req, res) =
   }
   const db = getDb();
   try {
-    const admin = db.prepare('SELECT id, name FROM admins WHERE id = ?').get(id);
+    const admin = db.prepare('SELECT id, name FROM admins WHERE id = ? AND deleted_at IS NULL').get(id);
     if (!admin) {
       return res.status(404).json({ error: 'Admin topilmadi' });
     }
@@ -223,7 +223,8 @@ app.delete('/api/admins/:id', authMiddleware, superAdminMiddleware, (req, res) =
     db.prepare('UPDATE shifts SET end_time = ?, closed = 1, notes = ? WHERE admin_name = ? AND closed = 0').run(
       nowLocal(), 'Admin o\'chirilgani sababli avtomatik yopildi', admin.name
     );
-    db.prepare('DELETE FROM admins WHERE id = ?').run(id);
+    // Soft delete: mark as deleted instead of removing
+    db.prepare('UPDATE admins SET deleted_at = ? WHERE id = ?').run(nowLocal(), id);
     logActivity(db, req.admin.name, 'admin_delete', `Admin o'chirildi: ${admin.name}`, null, null);
     res.json({ success: true });
   } finally {
@@ -1035,6 +1036,23 @@ app.post('/webhook/github', express.raw({ type: 'application/json' }), (req, res
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+// Global Express error handler
+app.use((err, req, res, _next) => {
+  console.error(`[${new Date().toISOString()}] Unhandled error:`, err.message || err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Serverda kutilmagan xatolik yuz berdi' });
+  }
+});
+
+// Process-level error handlers
+process.on('uncaughtException', (err) => {
+  console.error(`[${new Date().toISOString()}] Uncaught Exception:`, err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[${new Date().toISOString()}] Unhandled Rejection:`, reason);
 });
 
 app.listen(PORT, () => {
