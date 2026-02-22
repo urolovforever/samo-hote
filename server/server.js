@@ -238,7 +238,7 @@ app.put('/api/admins/password', authMiddleware, (req, res) => {
     return res.status(400).json({ error: 'Eski va yangi parol kerak' });
   }
   if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'Yangi parol kamida 4 belgi bo\'lishi kerak' });
+    return res.status(400).json({ error: 'Yangi parol kamida 8 belgi bo\'lishi kerak' });
   }
   const db = getDb();
   try {
@@ -290,6 +290,21 @@ app.put('/api/rooms/:id', authMiddleware, (req, res) => {
     const validStatuses = ['available', 'occupied', 'cleaning', 'maintenance', 'booked'];
     if (updates.status && !validStatuses.includes(updates.status)) {
       return res.status(400).json({ error: 'Noto\'g\'ri xona holati' });
+    }
+
+    // Status o'tish qoidalari
+    if (updates.status && updates.status !== existing.status) {
+      const allowedTransitions = {
+        available:   ['occupied', 'cleaning', 'maintenance', 'booked'],
+        occupied:    ['available', 'cleaning'],
+        cleaning:    ['available', 'maintenance'],
+        maintenance: ['available', 'cleaning'],
+        booked:      ['occupied', 'available'],
+      };
+      const allowed = allowedTransitions[existing.status] || [];
+      if (!allowed.includes(updates.status)) {
+        return res.status(400).json({ error: `Xona "${existing.status}" dan "${updates.status}" ga o'tkazib bo'lmaydi` });
+      }
     }
 
     // Validate price
@@ -569,7 +584,17 @@ app.post('/api/bookings', authMiddleware, (req, res) => {
   if (check_out_date && check_out_date <= check_in_date) {
     return res.status(400).json({ error: 'Ketish sanasi kelish sanasidan keyin bo\'lishi kerak' });
   }
+  // Sana oraliq tekshiruvi: max 1 yil kelajakka
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 1);
+  const maxDateStr = maxDate.toISOString().split('T')[0];
+  if (check_in_date > maxDateStr) {
+    return res.status(400).json({ error: 'Kelish sanasi 1 yildan koproq kelajakda bo\'lishi mumkin emas' });
+  }
   const nightCount = Math.max(1, Number(nights) || 1);
+  if (nightCount > 365) {
+    return res.status(400).json({ error: 'Tunlar soni 365 dan oshmasligi kerak' });
+  }
 
   const id = Date.now().toString();
   const db = getDb();
@@ -919,6 +944,9 @@ app.post('/api/reports/daily/:date/close', authMiddleware, (req, res) => {
   const { report_text } = req.body;
   if (!report_text) {
     return res.status(400).json({ error: 'report_text kerak' });
+  }
+  if (typeof report_text !== 'string' || report_text.length > 500_000) {
+    return res.status(400).json({ error: 'Hisobot matni juda katta (max 500KB)' });
   }
   const db = getDb();
   try {

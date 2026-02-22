@@ -111,7 +111,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       // Sync current shift totals from server data
       if (currentShift) {
+        // Serverdan joriy shift ni topish (yopilmagan)
         const serverShift = shiftsData.find((s: any) => String(s.id) === currentShift.id && !s.closed)
+        // Yopilgan shift lardan ham tekshirish
+        const closedOnServer = !serverShift && shiftsData.find((s: any) => String(s.id) === currentShift.id && s.closed)
+
         if (serverShift) {
           const updated = {
             ...currentShift,
@@ -121,7 +125,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setCurrentShift(updated)
           localStorage.setItem('samo_shift', JSON.stringify(updated))
         } else {
-          // Shift not found on server (deleted admin or already closed) — clear stale state
+          // Shift serverda topilmadi yoki yopilgan — local state ni tozalash
+          if (closedOnServer) {
+            console.warn('Shift boshqa joyda yopilgan, local state tozalanmoqda')
+          }
           setCurrentShift(null)
           localStorage.removeItem('samo_shift')
         }
