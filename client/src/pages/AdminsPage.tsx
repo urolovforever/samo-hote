@@ -122,7 +122,7 @@ export default function AdminsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>Adminlar</h2>
           <p className="text-white/30 text-sm mt-1">Tizim adminlarini boshqarish — {admins.length} ta admin</p>
@@ -130,17 +130,19 @@ export default function AdminsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setShowPassword(true); setPwError(''); setPwSuccess(''); setPwForm({ oldPassword: '', newPassword: '', confirmPassword: '' }) }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/[0.08] text-white/60 rounded-xl text-sm font-medium hover:text-white/80 transition-all"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-white/[0.05] border border-white/[0.08] text-white/60 rounded-xl text-sm font-medium hover:text-white/80 transition-all"
           >
             <KeyRound className="w-4 h-4" />
-            Parol o'zgartirish
+            <span className="hidden sm:inline">Parol o'zgartirish</span>
+            <span className="sm:hidden">Parol</span>
           </button>
           <button
             onClick={() => setShowDialog(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-sm font-medium hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-sm font-medium hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
           >
             <UserPlus className="w-4 h-4" />
-            Yangi admin
+            <span className="hidden sm:inline">Yangi admin</span>
+            <span className="sm:hidden">Yangi</span>
           </button>
         </div>
       </div>
@@ -151,8 +153,8 @@ export default function AdminsPage() {
         </div>
       )}
 
-      {/* Admin table */}
-      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] overflow-hidden">
+      {/* Admin table - desktop */}
+      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] overflow-hidden hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/[0.06]">
@@ -229,6 +231,72 @@ export default function AdminsPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Admin cards - mobile */}
+      <div className="md:hidden space-y-3">
+        {admins.map(a => (
+          <div key={a.id} className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${
+                  a.role === 'super_admin'
+                    ? 'bg-gradient-to-br from-amber-400 to-orange-600 shadow-lg shadow-amber-500/20'
+                    : 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/20'
+                }`}>
+                  {a.name.split(' ').map(w => w[0]).join('')}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white/80">{a.name}</p>
+                  <p className="text-xs text-white/30 font-mono">{a.username}</p>
+                </div>
+              </div>
+              {String(a.id) !== currentAdmin?.id ? (
+                deleteId === a.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleDelete(a.id)}
+                      className="px-2.5 py-1.5 bg-red-500/15 text-red-400 rounded-lg text-xs font-medium border border-red-500/20"
+                    >
+                      Ha
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(null)}
+                      className="px-2.5 py-1.5 bg-white/[0.05] text-white/40 rounded-lg text-xs font-medium border border-white/[0.06]"
+                    >
+                      Yo'q
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteId(a.id)}
+                    className="p-2 rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )
+              ) : (
+                <span className="text-[10px] text-white/15 italic">Siz</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              {a.role === 'super_admin' ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">
+                  <Shield className="w-3 h-3" />
+                  Super Admin
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.05] text-white/40 text-xs font-medium border border-white/[0.06]">
+                  <User className="w-3 h-3" />
+                  Admin
+                </span>
+              )}
+              <span className="text-[11px] text-white/20">
+                {a.created_at ? new Date(a.created_at).toLocaleDateString('uz-UZ', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Create dialog */}

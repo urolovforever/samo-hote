@@ -102,31 +102,37 @@ export default function Layout() {
               <Hotel className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-sm tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>SAMO HOTEL</span>
+            {admin && (
+              <span className="text-[10px] text-white/30 ml-1 hidden xs:inline">— {admin.name}</span>
+            )}
           </div>
           <button onClick={() => setMobileMenu(!mobileMenu)} className="p-2 rounded-lg hover:bg-white/5">
             {mobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
         {mobileMenu && (
-          <nav className="px-3 pb-3 space-y-0.5 border-t border-white/[0.06] pt-2 bg-[#161923]">
-            {navItems.filter(item => !item.superOnly || admin?.role === 'super_admin').map(item => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenu(false)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm ${
-                  isActive(item.path) ? 'bg-amber-500/10 text-amber-400' : 'text-white/40'
-                }`}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            ))}
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400/50 rounded-lg">
-              <LogOut className="w-4 h-4" />
-              Chiqish
-            </button>
-          </nav>
+          <>
+            <div className="fixed inset-0 top-[53px] bg-black/50 z-30" onClick={() => setMobileMenu(false)} />
+            <nav className="relative z-40 px-3 pb-3 space-y-0.5 border-t border-white/[0.06] pt-2 bg-[#161923]">
+              {navItems.filter(item => !item.superOnly || admin?.role === 'super_admin').map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenu(false)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm ${
+                    isActive(item.path) ? 'bg-amber-500/10 text-amber-400' : 'text-white/40'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              ))}
+              <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400/50 rounded-lg">
+                <LogOut className="w-4 h-4" />
+                Chiqish
+              </button>
+            </nav>
+          </>
         )}
       </div>
 

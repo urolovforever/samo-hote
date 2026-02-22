@@ -557,7 +557,7 @@ export default function BookingsPage() {
                   className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40" />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[11px] text-white/40 uppercase tracking-wider font-medium block mb-1.5">Qoldiq to'lov</label>
                   <input type="number" value={ciPrice} onChange={e => setCiPrice(e.target.value)}

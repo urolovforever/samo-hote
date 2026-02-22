@@ -420,7 +420,7 @@ export default function RoomsPage() {
             <Field label="Mehmon ismi *" value={guestName} onChange={setGuestName} placeholder="To'liq ism" />
             <Field label="Passport / ID" value={guestPassport} onChange={setGuestPassport} placeholder="AB1234567" />
             <Field label="Telefon" value={guestPhone} onChange={setGuestPhone} placeholder="+998 90 123 45 67" />
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="Umumiy narx" value={priceOverride} onChange={setPriceOverride} type="number" />
               <Field label="Necha kecha" value={nights} onChange={setNights} type="number" placeholder="1" min="1" />
               <Field label="Sana" value={txDate} onChange={setTxDate} type="date" />
@@ -504,36 +504,40 @@ export default function RoomsPage() {
                 {extraCharges.length > 0 && (
                   <div className="space-y-2">
                     {extraCharges.map((charge, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <select
-                          value={charge.type}
-                          onChange={e => updateExtraCharge(i, 'type', e.target.value)}
-                          className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-2 text-xs text-white focus:outline-none w-20"
-                        >
-                          <option value="income">Kirim</option>
-                          <option value="expense">Chiqim</option>
-                        </select>
-                        <input
-                          type="text"
-                          value={charge.description}
-                          onChange={e => updateExtraCharge(i, 'description', e.target.value)}
-                          placeholder="Tavsif"
-                          className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none"
-                        />
-                        <input
-                          type="number"
-                          value={charge.amount}
-                          onChange={e => updateExtraCharge(i, 'amount', e.target.value)}
-                          placeholder="Summa"
-                          className="w-24 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeExtraCharge(i)}
-                          className="p-1.5 text-red-400/50 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <div key={i} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={charge.type}
+                            onChange={e => updateExtraCharge(i, 'type', e.target.value)}
+                            className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-2 text-xs text-white focus:outline-none w-20"
+                          >
+                            <option value="income">Kirim</option>
+                            <option value="expense">Chiqim</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={charge.description}
+                            onChange={e => updateExtraCharge(i, 'description', e.target.value)}
+                            placeholder="Tavsif"
+                            className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={charge.amount}
+                            onChange={e => updateExtraCharge(i, 'amount', e.target.value)}
+                            placeholder="Summa"
+                            className="flex-1 sm:w-24 sm:flex-none bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExtraCharge(i)}
+                            className="p-1.5 text-red-400/50 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -541,7 +545,7 @@ export default function RoomsPage() {
               </div>
 
               <p className="text-xs text-white/30 text-center">To'lov check-in paytida olingan. Xona "Tozalanmoqda" holatiga o'tadi.</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col sm:flex-row sm:grid sm:grid-cols-3 gap-2">
                 <button
                   onClick={closeDialog}
                   disabled={submitting}

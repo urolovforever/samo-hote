@@ -129,7 +129,7 @@ export default function Dashboard() {
                 className={`w-full flex items-center gap-3 ${ns.bg} border ${ns.border} rounded-xl px-4 py-3 text-left hover:scale-[1.01] transition-transform`}
               >
                 <NIcon className={`w-4 h-4 ${ns.text} shrink-0`} />
-                <span className={`text-sm ${ns.text} font-medium`}>{notif.message}</span>
+                <span className={`text-sm ${ns.text} font-medium line-clamp-2`}>{notif.message}</span>
                 <ArrowRight className={`w-3.5 h-3.5 ${ns.text} ml-auto shrink-0 opacity-50`} />
               </button>
             )
@@ -288,8 +288,8 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{tx.description}</p>
-                    <p className="text-[11px] text-white/25">{tx.category} • {tx.admin}</p>
+                    <p className="text-sm font-medium truncate">{tx.description}</p>
+                    <p className="text-[11px] text-white/25 truncate">{tx.category} • {tx.admin}</p>
                   </div>
                 </div>
                 <span className={`font-semibold text-sm ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -333,7 +333,7 @@ function StatCard({ icon: Icon, label, value, color, onClick }: {
         <Icon className="w-[18px] h-[18px]" />
       </div>
       <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-base sm:text-xl font-bold text-white">{value}</p>
     </button>
   )
 }

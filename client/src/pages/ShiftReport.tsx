@@ -1228,7 +1228,7 @@ export default function ShiftReport() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="hidden sm:flex items-center gap-3 text-sm">
+                      <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                         <span className="text-emerald-400">+{formatUZS(shift.totalIncome)}</span>
                         <span className="text-red-400">-{formatUZS(shift.totalExpense)}</span>
                       </div>
@@ -1246,7 +1246,7 @@ export default function ShiftReport() {
 
                   {isExpanded && (
                     <div className="px-5 pb-4 space-y-3 border-t border-white/[0.04] pt-3">
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="bg-emerald-500/5 rounded-xl p-3 text-center">
                           <p className="text-[10px] text-emerald-400/50 uppercase">Kirim</p>
                           <p className="text-sm font-bold text-emerald-400">{formatUZS(shift.totalIncome)}</p>

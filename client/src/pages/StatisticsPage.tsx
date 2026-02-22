@@ -184,7 +184,7 @@ export default function StatisticsPage() {
             <BarChart data={weeklyChart} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="Kirim" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Chiqim" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -208,8 +208,8 @@ export default function StatisticsPage() {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={dailyChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<SimpleTooltip />} />
               <Line type="monotone" dataKey="Kirish" stroke="#3b82f6" strokeWidth={2} dot={false} />
             </LineChart>
@@ -234,7 +234,7 @@ export default function StatisticsPage() {
               <BarChart data={monthlyChart} barGap={2}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+                <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="Daromad" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Xarajat" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -300,7 +300,7 @@ export default function StatisticsPage() {
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={topRoomsChart} layout="vertical" barSize={20}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+                <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} width={80} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="Daromad" fill="#10b981" radius={[0, 4, 4, 0]} />
@@ -372,7 +372,7 @@ function KPICard({ icon: Icon, label, value, color }: {
         <Icon className="w-[18px] h-[18px]" />
       </div>
       <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-lg font-bold text-white truncate">{value}</p>
+      <p className="text-base sm:text-lg font-bold text-white truncate">{value}</p>
     </div>
   )
 }
