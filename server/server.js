@@ -3,7 +3,9 @@ process.env.TZ = 'Asia/Tashkent';
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
+const { exec } = require('child_process');
 require('dotenv').config();
 
 const { getDb, initDb } = require('./database');
@@ -833,6 +835,47 @@ app.get('/api/reports/closed-dates', authMiddleware, (req, res) => {
   } finally {
     db.close();
   }
+});
+
+// ============ GITHUB WEBHOOK ============
+app.post('/webhook/github', express.raw({ type: 'application/json' }), (req, res) => {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (!secret) {
+    console.error('WEBHOOK_SECRET is not set');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
+
+  const signature = req.headers['x-hub-signature-256'];
+  if (!signature) {
+    return res.status(401).json({ error: 'No signature' });
+  }
+
+  const body = req.body;
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const payload = JSON.parse(body);
+  const event = req.headers['x-github-event'];
+
+  if (event !== 'push' || payload.ref !== 'refs/heads/main') {
+    return res.status(200).json({ message: 'Ignored' });
+  }
+
+  console.log(`[Deploy] Push to main by ${payload.pusher?.name || 'unknown'}, starting deploy...`);
+
+  const scriptPath = path.join(__dirname, '../deploy.sh');
+  exec(`bash ${scriptPath}`, { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('[Deploy] Error:', error.message);
+      console.error('[Deploy] Stderr:', stderr);
+    } else {
+      console.log('[Deploy] Success:', stdout);
+    }
+  });
+
+  res.status(200).json({ message: 'Deploy started' });
 });
 
 // SPA fallback
