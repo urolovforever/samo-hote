@@ -861,13 +861,13 @@ export default function ShiftReport() {
   const [reportDate, setReportDate] = useState(() => todayTashkent())
   const [reportMonth, setReportMonth] = useState(() => currentMonthTashkent())
   const [zipping, setZipping] = useState(false)
-  const [closedDates, setClosedDates] = useState<Record<string, { admin_name: string; closed_at: string }>>({})
+  const [closedDates, setClosedDates] = useState<Record<string, { admin_name: string; closed_at: string; total_income: number; total_expense: number }>>({})
   const [closing, setClosing] = useState(false)
 
   useEffect(() => {
     api.getClosedDates().then(rows => {
-      const map: Record<string, { admin_name: string; closed_at: string }> = {}
-      rows.forEach((r: any) => { map[r.date] = { admin_name: r.admin_name, closed_at: r.closed_at } })
+      const map: Record<string, { admin_name: string; closed_at: string; total_income: number; total_expense: number }> = {}
+      rows.forEach((r: any) => { map[r.date] = { admin_name: r.admin_name, closed_at: r.closed_at, total_income: r.total_income || 0, total_expense: r.total_expense || 0 } })
       setClosedDates(map)
     }).catch(() => {})
   }, [])
@@ -876,8 +876,16 @@ export default function ShiftReport() {
     setClosing(true)
     try {
       const reportText = generateDayReport(reportDate, transactions, shifts, rooms, currentShift)
-      await api.closeDailyReport(reportDate, reportText)
-      setClosedDates(prev => ({ ...prev, [reportDate]: { admin_name: 'Siz', closed_at: todayTashkent() + 'T' + nowTimeTashkent() } }))
+      const result = await api.closeDailyReport(reportDate, reportText)
+      setClosedDates(prev => ({
+        ...prev,
+        [reportDate]: {
+          admin_name: result.admin_name || 'Siz',
+          closed_at: result.closed_at || todayTashkent() + 'T' + nowTimeTashkent(),
+          total_income: result.total_income || 0,
+          total_expense: result.total_expense || 0,
+        }
+      }))
     } catch (err: any) {
       console.error('Kunni yopishda xatolik:', err)
       alert('Kunni yopishda xatolik: ' + (err?.message || 'Noma\'lum xato'))
@@ -925,11 +933,15 @@ export default function ShiftReport() {
       const monthName = MONTHS_UZ[month - 1]
 
       // Fetch closed reports for this month from server
-      let closedReports: Record<string, string> = {}
+      let closedReports: Record<string, { report_text?: string; total_income: number; total_expense: number }> = {}
       try {
         const rows = await api.getClosedDates(reportMonth)
         rows.forEach((r: any) => {
-          if (r.report_text) closedReports[r.date] = r.report_text
+          closedReports[r.date] = {
+            report_text: r.report_text,
+            total_income: r.total_income || 0,
+            total_expense: r.total_expense || 0,
+          }
         })
       } catch {}
 
@@ -950,7 +962,8 @@ export default function ShiftReport() {
         const dayShifts = shifts.filter(s => s.startTime.startsWith(dateStr))
         const isCurrentShiftDay = currentShift && currentShift.startTime.startsWith(dateStr)
 
-        const hasDayData = closedReports[dateStr] || dayTx.length > 0 || dayShifts.length > 0 || isCurrentShiftDay
+        const closed = closedReports[dateStr]
+        const hasDayData = closed || dayTx.length > 0 || dayShifts.length > 0 || isCurrentShiftDay
         if (hasDayData) {
           const doc = generateDayReportDocx(dateStr, transactions, shifts, rooms, currentShift)
           const docxBlob = await Packer.toBlob(doc)
@@ -959,12 +972,20 @@ export default function ShiftReport() {
           hasData = true
           totalDaysWithData++
 
-          const dayIncome = dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-          const dayExpense = dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+          // Use saved totals for closed dates, live data for open dates
+          let dayIncome: number
+          let dayExpense: number
+          if (closed) {
+            dayIncome = closed.total_income
+            dayExpense = closed.total_expense
+          } else {
+            dayIncome = dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+            dayExpense = dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+          }
           monthTotalIncome += dayIncome
           monthTotalExpense += dayExpense
 
-          const tag = closedReports[dateStr] ? '  [yopilgan]' : ''
+          const tag = closed ? '  [yopilgan]' : ''
           summary += `  ${dateStr}:  Kirim: ${formatUZS(dayIncome).padStart(20)}  |  Chiqim: ${formatUZS(dayExpense).padStart(20)}${tag}\n`
         }
       }
@@ -1027,11 +1048,19 @@ export default function ShiftReport() {
               />
             </div>
             {closedDates[reportDate] && (
-              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs text-emerald-400 font-medium">
-                  Yopilgan — {closedDates[reportDate].admin_name}
-                </span>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-xs text-emerald-400 font-medium">
+                    Yopilgan — {closedDates[reportDate].admin_name}
+                  </span>
+                </div>
+                {(closedDates[reportDate].total_income > 0 || closedDates[reportDate].total_expense > 0) && (
+                  <div className="flex items-center gap-3 text-[11px] pl-5.5">
+                    <span className="text-emerald-400/70">Kirim: {formatUZS(closedDates[reportDate].total_income)}</span>
+                    <span className="text-red-400/70">Chiqim: {formatUZS(closedDates[reportDate].total_expense)}</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
