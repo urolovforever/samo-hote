@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
+import { formatDateTashkent } from '../types'
 import {
   ShieldCheck,
   UserPlus,
@@ -195,7 +196,7 @@ export default function AdminsPage() {
                   )}
                 </td>
                 <td className="px-5 py-4 text-sm text-white/30">
-                  {a.created_at ? new Date(a.created_at).toLocaleDateString('uz-UZ', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                  {a.created_at ? formatDateTashkent(a.created_at, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                 </td>
                 <td className="px-5 py-4 text-right">
                   {String(a.id) !== currentAdmin?.id ? (
@@ -292,7 +293,7 @@ export default function AdminsPage() {
                 </span>
               )}
               <span className="text-[11px] text-white/20">
-                {a.created_at ? new Date(a.created_at).toLocaleDateString('uz-UZ', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                {a.created_at ? formatDateTashkent(a.created_at, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
               </span>
             </div>
           </div>

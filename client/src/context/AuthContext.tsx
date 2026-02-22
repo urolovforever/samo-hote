@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { Admin, ShiftLog } from '../types'
+import { todayTashkent, nowTimeTashkent } from '../types'
 import { api, setToken, clearToken } from '../lib/api'
 
 interface AuthContextType {
@@ -49,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const shiftLog: ShiftLog = {
           id: String(shift.id),
           admin: shift.admin_name || adminData.name,
-          shift: new Date().toLocaleString('uz-UZ'),
-          startTime: shift.start_time || new Date().toISOString(),
+          shift: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }),
+          startTime: shift.start_time || (todayTashkent() + 'T' + nowTimeTashkent()),
           totalIncome: shift.total_income || 0,
           totalExpense: shift.total_expense || 0,
           notes: shift.notes || '',

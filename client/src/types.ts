@@ -62,5 +62,52 @@ export interface Admin {
 }
 
 export function formatUZS(n: number): string {
-  return n.toLocaleString('uz-UZ') + ' so\'m'
+  return n.toLocaleString('uz-UZ') + ' som'
+}
+
+const TZ = 'Asia/Tashkent'
+const TZ_OFFSET = '+05:00' // Tashkent UTC+5 (DST yo'q)
+
+/**
+ * Serverdan kelgan sanani to'g'ri parse qilish.
+ * Server sanalarni "2026-02-22T17:33:12" yoki "2026-02-22" formatda saqlaydi.
+ * Bu Tashkent vaqti, shuning uchun +05:00 qo'shamiz.
+ */
+export function parseTashkentDate(date: string | Date): Date {
+  if (date instanceof Date) return date
+  if (!date) return new Date(NaN)
+  // Allaqachon timezone bor
+  if (date.endsWith('Z') || date.includes('+')) return new Date(date)
+  // "2026-02-22T17:33:12" — vaqtli format
+  if (date.includes('T')) return new Date(date + TZ_OFFSET)
+  // "2026-02-22" — faqat sana
+  return new Date(date + 'T00:00:00' + TZ_OFFSET)
+}
+
+/** Bugungi sanani Tashkent vaqtida qaytaradi: YYYY-MM-DD */
+export function todayTashkent(): string {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: TZ })
+}
+
+/** Hozirgi oy: YYYY-MM */
+export function currentMonthTashkent(): string {
+  return todayTashkent().slice(0, 7)
+}
+
+/** Tashkent vaqtida hozirgi soat:minut:soniya */
+export function nowTimeTashkent(): string {
+  return new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour12: false })
+}
+
+/** Date ni Tashkent vaqtida formatlash */
+export function formatDateTashkent(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  return parseTashkentDate(date).toLocaleDateString('uz-UZ', { timeZone: TZ, ...options })
+}
+
+export function formatTimeTashkent(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  return parseTashkentDate(date).toLocaleTimeString('uz-UZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit', ...options })
+}
+
+export function formatDateTimeTashkent(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  return parseTashkentDate(date).toLocaleString('uz-UZ', { timeZone: TZ, ...options })
 }

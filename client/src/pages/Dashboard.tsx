@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
-import { formatUZS } from '../types'
+import { formatUZS, todayTashkent, formatDateTashkent, formatTimeTashkent } from '../types'
 import {
   BedDouble,
   TrendingUp,
@@ -33,7 +33,7 @@ export default function Dashboard() {
   }), [rooms])
 
   const { todayIncome, todayExpense } = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayTashkent()
     const todayTx = transactions.filter(t => t.date.split('T')[0] === today)
     return {
       todayIncome: todayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   // Notifications
   const notifications = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayTashkent()
     const items: { type: 'red' | 'yellow' | 'blue' | 'info'; message: string; path: string }[] = []
 
     // Red: Overdue checkout (checkOut date passed)
@@ -112,7 +112,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>
             Bosh sahifa
           </h2>
-          <p className="text-white/30 text-sm mt-1">Bugungi holat — {new Date().toLocaleDateString('uz-UZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p className="text-white/30 text-sm mt-1">Bugungi holat — {formatDateTashkent(new Date(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
       </div>
 
@@ -202,7 +202,7 @@ export default function Dashboard() {
                   <p className="font-medium">{currentShift.admin}</p>
                   <div className="flex items-center gap-1.5 text-white/30 text-xs">
                     <Clock className="w-3 h-3" />
-                    {new Date(currentShift.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })} dan boshlab
+                    {formatTimeTashkent(currentShift.startTime)} dan boshlab
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Booking } from '../types'
-import { formatUZS } from '../types'
+import { formatUZS, todayTashkent, nowTimeTashkent, formatDateTimeTashkent } from '../types'
 import { useData } from '../context/DataContext'
 import {
   Dialog,
@@ -51,7 +51,7 @@ export default function BookingsPage() {
   const [ciPassport, setCiPassport] = useState('')
   const [ciNights, setCiNights] = useState('1')
   const [ciPrice, setCiPrice] = useState('')
-  const [ciDate, setCiDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [ciDate, setCiDate] = useState(() => todayTashkent())
 
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
@@ -59,7 +59,20 @@ export default function BookingsPage() {
 
   const availableRooms = rooms.filter(r => r.status === 'available')
 
-  const filtered = bookings.filter(b => {
+  const today = todayTashkent()
+
+  const visibleBookings = bookings.filter(b => {
+    // Joylashganlar ko'rinmasin
+    if (b.status === 'checked_in') return false
+    // Bekor qilinganlar faqat 1 kun ko'rinsin
+    if (b.status === 'cancelled' && b.createdAt) {
+      const cancelDate = b.createdAt.split('T')[0]
+      if (cancelDate < today) return false
+    }
+    return true
+  })
+
+  const filtered = visibleBookings.filter(b => {
     if (filterStatus !== 'all' && b.status !== filterStatus) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -73,7 +86,7 @@ export default function BookingsPage() {
       setFormError('Barcha majburiy maydonlarni to\'ldiring')
       return
     }
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayTashkent()
     if (bCheckIn < today) {
       setFormError('Kelish sanasi bugundan oldin bo\'lishi mumkin emas')
       return
@@ -152,12 +165,11 @@ export default function BookingsPage() {
     setSubmitting(true)
     setFormError('')
     try {
-      const now = new Date()
-      const timeStr = `T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+      const timeStr = `T${nowTimeTashkent()}`
       const fullDate = ciDate + timeStr
       await checkInFromBooking(showCheckIn.id, ciPassport.trim(), Number(ciNights) || 1, fullDate, price)
       setShowCheckIn(null)
-      setCiPassport(''); setCiNights('1'); setCiPrice(''); setCiDate(new Date().toISOString().split('T')[0])
+      setCiPassport(''); setCiNights('1'); setCiPrice(''); setCiDate(todayTashkent())
     } catch (err: any) {
       setFormError(err.message || 'Joylashtirishda xatolik')
     } finally {
@@ -273,7 +285,7 @@ export default function BookingsPage() {
                         <p className="text-[11px] text-white/20 mt-1.5 italic">{booking.notes}</p>
                       )}
                       <p className="text-[10px] text-white/15 mt-1">
-                        {booking.createdBy} tomonidan — {new Date(booking.createdAt).toLocaleString('uz-UZ')}
+                        {booking.createdBy} tomonidan — {formatDateTimeTashkent(booking.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -295,7 +307,7 @@ export default function BookingsPage() {
                           setCiNights(String(booking.nights))
                           const room = rooms.find(r => r.number === booking.roomNumber)
                           const totalPrice = (room?.pricePerNight || 300000) * (booking.nights || 1)
-                          setCiPrice(String(Math.max(0, totalPrice - (booking.prepayment || 0))))
+                          setCiPrice(String(totalPrice))
                           setFormError('')
                         }}
                         className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl text-xs font-medium hover:bg-emerald-500/20 transition-all"
@@ -559,7 +571,7 @@ export default function BookingsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[11px] text-white/40 uppercase tracking-wider font-medium block mb-1.5">Qoldiq to'lov</label>
+                  <label className="text-[11px] text-white/40 uppercase tracking-wider font-medium block mb-1.5">Jami narx</label>
                   <input type="number" value={ciPrice} onChange={e => setCiPrice(e.target.value)}
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40" />
                 </div>
@@ -577,7 +589,7 @@ export default function BookingsPage() {
 
               {showCheckIn.prepayment > 0 && (
                 <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-xs text-amber-400/70">
-                  Oldindan to'lov: {formatUZS(showCheckIn.prepayment)} — qoldiq narxdan ayirilgan
+                  Oldindan to'lov: {formatUZS(showCheckIn.prepayment)} (allaqachon kirimga yozilgan). Qoldiq: {formatUZS(Math.max(0, Number(ciPrice) - showCheckIn.prepayment))}
                 </div>
               )}
 

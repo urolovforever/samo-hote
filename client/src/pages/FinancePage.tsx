@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatUZS } from '../types'
+import { formatUZS, todayTashkent, nowTimeTashkent, formatDateTashkent, formatTimeTashkent } from '../types'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -31,7 +31,7 @@ export default function FinancePage() {
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [roomNumber, setRoomNumber] = useState('')
-  const [txDate, setTxDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [txDate, setTxDate] = useState(() => todayTashkent())
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
   const [dateFilter, setDateFilter] = useState('')
@@ -44,6 +44,8 @@ export default function FinancePage() {
 
   // Delete confirm
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const [page, setPage] = useState(0)
 
   const filtered = transactions.filter(tx => {
     if (filterType !== 'all' && tx.type !== filterType) return false
@@ -62,8 +64,6 @@ export default function FinancePage() {
 
   const totalIncome = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const totalExpense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-
-  const [page, setPage] = useState(0)
   const PAGE_SIZE = 50
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
@@ -76,8 +76,7 @@ export default function FinancePage() {
     setSubmitting(true)
     setFormError('')
     try {
-      const now = new Date()
-      const timeStr = `T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+      const timeStr = `T${nowTimeTashkent()}`
       const fullDate = txDate + timeStr
 
       await addTransaction({
@@ -94,7 +93,7 @@ export default function FinancePage() {
       setAmount('')
       setDescription('')
       setRoomNumber('')
-      setTxDate(new Date().toISOString().split('T')[0])
+      setTxDate(todayTashkent())
     } catch (err: any) {
       setFormError(err.message || 'Xatolik yuz berdi')
     } finally {
@@ -265,11 +264,11 @@ export default function FinancePage() {
                       {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
                     </p>
                     <p className="text-[10px] text-white/20 mt-0.5">
-                      {new Date(tx.date).toLocaleDateString('uz-UZ')} {new Date(tx.date).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}
+                      {formatDateTashkent(tx.date)} {formatTimeTashkent(tx.date)}
                     </p>
                   </div>
                   {canModify(tx.admin) && (
-                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
                         className="p-1.5 rounded-lg hover:bg-amber-500/10 text-white/30 hover:text-amber-400 transition-all"

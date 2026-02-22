@@ -1,4 +1,5 @@
 import { useData } from '../context/DataContext'
+import { formatDateTashkent } from '../types'
 import { Users, Phone, CreditCard, Calendar, BedDouble } from 'lucide-react'
 
 export default function GuestsPage() {
@@ -56,7 +57,7 @@ export default function GuestsPage() {
                   <div className="flex items-center gap-2.5">
                     <Calendar className="w-3.5 h-3.5 text-white/20" />
                     <span className="text-sm text-white/50">
-                      Kirish: {new Date(room.checkIn).toLocaleDateString('uz-UZ')}
+                      Kirish: {formatDateTashkent(room.checkIn)}
                     </span>
                   </div>
                 )}
@@ -64,7 +65,7 @@ export default function GuestsPage() {
                   <div className="flex items-center gap-2.5">
                     <Calendar className="w-3.5 h-3.5 text-amber-400/30" />
                     <span className="text-sm text-amber-400/50">
-                      Chiqish: {new Date(room.checkOut).toLocaleDateString('uz-UZ')}
+                      Chiqish: {formatDateTashkent(room.checkOut)}
                     </span>
                   </div>
                 )}

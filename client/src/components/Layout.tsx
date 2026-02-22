@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Hotel,
   LayoutDashboard,
   BedDouble,
@@ -28,12 +34,23 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const { admin, logout } = useAuth()
+  const { admin, logout, currentShift } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenu, setMobileMenu] = useState(false)
+  const [showShiftWarning, setShowShiftWarning] = useState(false)
 
   const handleLogout = () => {
+    if (currentShift) {
+      setShowShiftWarning(true)
+      return
+    }
+    logout()
+    navigate('/login')
+  }
+
+  const forceLogout = () => {
+    setShowShiftWarning(false)
     logout()
     navigate('/login')
   }
@@ -142,6 +159,40 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Smena yopilmagan warning */}
+      <Dialog open={showShiftWarning} onOpenChange={setShowShiftWarning}>
+        <DialogContent className="bg-[#1a1d2a] border-white/[0.08] text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-400">
+              <ClipboardList className="w-5 h-5" />
+              Smena yopilmagan!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-white/50">
+              Sizda ochiq smena bor. Chiqishdan oldin smenani yoping.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setShowShiftWarning(false)
+                  navigate('/shift')
+                }}
+                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-amber-500/20 text-sm"
+              >
+                Smenani yopish
+              </button>
+              <button
+                onClick={forceLogout}
+                className="py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors"
+              >
+                Baribir chiqish
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

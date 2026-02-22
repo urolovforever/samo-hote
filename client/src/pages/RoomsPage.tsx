@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Room, RoomStatus } from '../types'
-import { formatUZS } from '../types'
+import { formatUZS, todayTashkent, nowTimeTashkent, formatDateTashkent } from '../types'
 import { useData } from '../context/DataContext'
 import {
   Dialog,
@@ -60,7 +60,7 @@ export default function RoomsPage() {
   const [priceOverride, setPriceOverride] = useState('')
   const [roomNotes, setRoomNotes] = useState('')
   const [nights, setNights] = useState('1')
-  const [txDate, setTxDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [txDate, setTxDate] = useState(() => todayTashkent())
 
   // Extra charges for checkout
   const [extraCharges, setExtraCharges] = useState<ExtraCharge[]>([])
@@ -84,7 +84,7 @@ export default function RoomsPage() {
     setPriceOverride(String(room.pricePerNight || 300000))
     setRoomNotes('')
     setNights('1')
-    setTxDate(new Date().toISOString().split('T')[0])
+    setTxDate(todayTashkent())
     setError('')
   }
 
@@ -134,13 +134,12 @@ export default function RoomsPage() {
     setSubmitting(true)
     setError('')
     try {
-      const now = new Date()
-      const timeStr = `T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+      const timeStr = `T${nowTimeTashkent()}`
       const fullDate = txDate + timeStr
 
-      const checkInDate = new Date(txDate)
-      checkInDate.setDate(checkInDate.getDate() + nightCount)
-      const checkOutDate = checkInDate.toISOString().split('T')[0]
+      const [y, m, d] = txDate.split('-').map(Number)
+      const checkInDate = new Date(y, m - 1, d + nightCount)
+      const checkOutDate = `${checkInDate.getFullYear()}-${String(checkInDate.getMonth() + 1).padStart(2, '0')}-${String(checkInDate.getDate()).padStart(2, '0')}`
 
       await updateRoom(selectedRoom.id, {
         status: 'occupied',
@@ -179,7 +178,7 @@ export default function RoomsPage() {
         const amt = Number(charge.amount)
         if (amt > 0 && charge.description.trim()) {
           await addTransaction({
-            date: new Date().toISOString().replace('Z', ''),
+            date: todayTashkent() + 'T' + nowTimeTashkent(),
             type: charge.type,
             category: charge.type === 'income' ? 'Qo\'shimcha xizmat' : 'Boshqa chiqim',
             amount: amt,
@@ -215,9 +214,10 @@ export default function RoomsPage() {
     setError('')
     try {
       // Calculate new checkout date
-      const currentCheckOut = selectedRoom.checkOut ? new Date(selectedRoom.checkOut) : new Date()
-      currentCheckOut.setDate(currentCheckOut.getDate() + addNights)
-      const newCheckOut = currentCheckOut.toISOString().split('T')[0]
+      const coDate = selectedRoom.checkOut || todayTashkent()
+      const [cy, cm, cd] = coDate.split('-').map(Number)
+      const newCo = new Date(cy, cm - 1, cd + addNights)
+      const newCheckOut = `${newCo.getFullYear()}-${String(newCo.getMonth() + 1).padStart(2, '0')}-${String(newCo.getDate()).padStart(2, '0')}`
 
       await updateRoom(selectedRoom.id, {
         checkOut: newCheckOut,
@@ -226,7 +226,7 @@ export default function RoomsPage() {
       // Add payment transaction if specified
       if (payment > 0) {
         await addTransaction({
-          date: new Date().toISOString().replace('Z', ''),
+          date: todayTashkent() + 'T' + nowTimeTashkent(),
           type: 'income',
           category: 'Xona to\'lovi',
           amount: payment,
@@ -363,12 +363,12 @@ export default function RoomsPage() {
                         </div>
                         {room.checkIn && (
                           <p className="text-[9px] sm:text-[10px] text-white/25 pl-6 sm:pl-8">
-                            Kirish: {new Date(room.checkIn).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
+                            Kirish: {formatDateTashkent(room.checkIn)}
                           </p>
                         )}
                         {room.checkOut && (
                           <p className="text-[9px] sm:text-[10px] text-white/25 pl-6 sm:pl-8">
-                            Chiqish: {new Date(room.checkOut).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })}
+                            Chiqish: {formatDateTashkent(room.checkOut)}
                           </p>
                         )}
                       </div>
@@ -437,9 +437,9 @@ export default function RoomsPage() {
                 <span className="text-[11px] sm:text-xs text-white/40">Muddat:</span>
                 <span className="text-[11px] sm:text-xs text-white/50">
                   {Math.max(1, Number(nights) || 1)} kecha — chiqish: {(() => {
-                    const d = new Date(txDate)
-                    d.setDate(d.getDate() + Math.max(1, Number(nights) || 1))
-                    return d.toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })
+                    const [yy, mm, dd] = txDate.split('-').map(Number)
+                    const d = new Date(yy, mm - 1, dd + Math.max(1, Number(nights) || 1))
+                    return formatDateTashkent(d)
                   })()}
                 </span>
               </div>
@@ -453,13 +453,21 @@ export default function RoomsPage() {
                 className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 resize-none h-20"
               />
             </div>
-            <button
-              onClick={handleCheckIn}
-              disabled={submitting || !guestName.trim()}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-sm disabled:opacity-50"
-            >
-              {submitting ? 'Joylashtirilmoqda...' : 'Joylashtirish'}
-            </button>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => { if (selectedRoom) { closeDialog(); openStatus(selectedRoom) } }}
+                className="py-3 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/70 text-xs font-medium transition-colors"
+              >
+                Holat
+              </button>
+              <button
+                onClick={handleCheckIn}
+                disabled={submitting || !guestName.trim()}
+                className="col-span-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-sm disabled:opacity-50"
+              >
+                {submitting ? 'Joylashtirilmoqda...' : 'Joylashtirish'}
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -484,8 +492,8 @@ export default function RoomsPage() {
                 <InfoRow label="Mehmon" value={selectedRoom.guestName || '-'} />
                 <InfoRow label="Passport" value={selectedRoom.guestPassport || '-'} />
                 <InfoRow label="Telefon" value={selectedRoom.guestPhone || '-'} />
-                <InfoRow label="Kirish sanasi" value={selectedRoom.checkIn ? new Date(selectedRoom.checkIn).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '-'} />
-                <InfoRow label="Chiqish sanasi" value={selectedRoom.checkOut ? new Date(selectedRoom.checkOut).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '-'} />
+                <InfoRow label="Kirish sanasi" value={selectedRoom.checkIn ? formatDateTashkent(selectedRoom.checkIn) : '-'} />
+                <InfoRow label="Chiqish sanasi" value={selectedRoom.checkOut ? formatDateTashkent(selectedRoom.checkOut) : '-'} />
               </div>
 
               {/* Extra charges section */}
@@ -593,7 +601,7 @@ export default function RoomsPage() {
               )}
               <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-3 sm:p-4 space-y-2">
                 <InfoRow label="Mehmon" value={selectedRoom.guestName || '-'} />
-                <InfoRow label="Hozirgi chiqish" value={selectedRoom.checkOut ? new Date(selectedRoom.checkOut).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '-'} />
+                <InfoRow label="Hozirgi chiqish" value={selectedRoom.checkOut ? formatDateTashkent(selectedRoom.checkOut) : '-'} />
               </div>
 
               <Field label="Qo'shimcha kechalar" value={extendNights} onChange={setExtendNights} type="number" min="1" />
@@ -603,9 +611,10 @@ export default function RoomsPage() {
                   <span className="text-xs text-white/40">Yangi chiqish sanasi:</span>
                   <span className="text-sm font-medium text-blue-400">
                     {(() => {
-                      const d = selectedRoom.checkOut ? new Date(selectedRoom.checkOut) : new Date()
-                      d.setDate(d.getDate() + Math.max(1, Number(extendNights) || 1))
-                      return d.toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })
+                      const co = selectedRoom.checkOut || todayTashkent()
+                      const [yy, mm, dd] = co.split('-').map(Number)
+                      const d = new Date(yy, mm - 1, dd + Math.max(1, Number(extendNights) || 1))
+                      return formatDateTashkent(d)
                     })()}
                   </span>
                 </div>

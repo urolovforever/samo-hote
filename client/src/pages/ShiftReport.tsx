@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { formatUZS } from '../types'
+import { formatUZS, todayTashkent, currentMonthTashkent, nowTimeTashkent, formatDateTashkent, formatTimeTashkent, formatDateTimeTashkent } from '../types'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
@@ -114,7 +114,7 @@ function generateDayReport(
   r += center('KUNLIK MOLIYAVIY HISOBOT')
   r += line(true)
   r += '  Sana:           ' + date + '\n'
-  r += '  Chop etilgan:   ' + new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) + '\n'
+  r += '  Chop etilgan:   ' + formatDateTimeTashkent(new Date()) + '\n'
   r += line()
   r += '\n'
 
@@ -146,7 +146,7 @@ function generateDayReport(
         rm.number,
         rm.guestName || '-',
         rm.guestPhone || '-',
-        rm.checkIn ? new Date(rm.checkIn).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '-',
+        rm.checkIn ? formatDateTashkent(rm.checkIn) : '-',
         'L',
       )
     })
@@ -204,8 +204,8 @@ function generateDayReport(
     r += '  SMENALAR\n'
     r += sep2()
     dateShifts.forEach((s, i) => {
-      const start = new Date(s.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })
-      const end = s.endTime ? new Date(s.endTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' }) : '...'
+      const start = formatTimeTashkent(s.startTime)
+      const end = s.endTime ? formatTimeTashkent(s.endTime) : '...'
       if (i > 0) r += sep2()
       r += row2(`${i + 1}. ${s.admin}`, `${start} - ${end}`, 'L')
       r += row2('   Kirim', formatUZS(s.totalIncome))
@@ -218,7 +218,7 @@ function generateDayReport(
   }
 
   if (currentShift && currentShift.startTime.startsWith(date)) {
-    const start = new Date(currentShift.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })
+    const start = formatTimeTashkent(currentShift.startTime)
     r += '  JORIY SMENA (yopilmagan)\n'
     r += sep2()
     r += row2('Admin', currentShift.admin, 'L')
@@ -256,10 +256,10 @@ function generateShiftReport(shift: ShiftLogType, shiftTransactions: Transaction
   r += center('SMENA MOLIYAVIY HISOBOTI')
   r += line(true)
   r += '  Admin:          ' + shift.admin + '\n'
-  r += '  Boshlanish:     ' + new Date(shift.startTime).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) + '\n'
-  r += '  Tugash:         ' + (shift.endTime ? new Date(shift.endTime).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : 'Hali yopilmagan') + '\n'
+  r += '  Boshlanish:     ' + formatDateTimeTashkent(shift.startTime) + '\n'
+  r += '  Tugash:         ' + (shift.endTime ? formatDateTimeTashkent(shift.endTime) : 'Hali yopilmagan') + '\n'
   r += '  Holati:         ' + (shift.closed ? 'Yopilgan' : 'Ochiq (faol)') + '\n'
-  r += '  Chop etilgan:   ' + new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) + '\n'
+  r += '  Chop etilgan:   ' + formatDateTimeTashkent(new Date()) + '\n'
   r += line()
   r += '\n'
 
@@ -444,7 +444,7 @@ function generateDayReportDocx(
         ] })], borders: noBorders }),
         new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [
           new TextRun({ text: 'Chop etilgan: ', color: '9CA3AF', size: 20, font: 'Segoe UI' }),
-          new TextRun({ text: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }), color: '6B7280', size: 20, font: 'Segoe UI' }),
+          new TextRun({ text: formatDateTimeTashkent(new Date()), color: '6B7280', size: 20, font: 'Segoe UI' }),
         ] })], borders: noBorders }),
       ] }),
     ],
@@ -489,7 +489,7 @@ function generateDayReportDocx(
         docxCell(rm.number, { bold: true, shading: i % 2 === 0 ? undefined : GRAY_LIGHT }),
         docxCell(rm.guestName || '-', { shading: i % 2 === 0 ? undefined : GRAY_LIGHT }),
         docxCell(rm.guestPhone || '-', { shading: i % 2 === 0 ? undefined : GRAY_LIGHT }),
-        docxCell(rm.checkIn ? new Date(rm.checkIn).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '-', { shading: i % 2 === 0 ? undefined : GRAY_LIGHT }),
+        docxCell(rm.checkIn ? formatDateTashkent(rm.checkIn) : '-', { shading: i % 2 === 0 ? undefined : GRAY_LIGHT }),
       ],
     }))
     children.push(new Table({
@@ -599,8 +599,8 @@ function generateDayReportDocx(
     children.push(docxSectionTitle('SMENALAR', PURPLE_COLOR))
     const shiftRows: TableRow[] = []
     dateShifts.forEach((s, i) => {
-      const start = new Date(s.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })
-      const end = s.endTime ? new Date(s.endTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' }) : '...'
+      const start = formatTimeTashkent(s.startTime)
+      const end = s.endTime ? formatTimeTashkent(s.endTime) : '...'
       const bg = i % 2 === 0 ? undefined : GRAY_LIGHT
       shiftRows.push(new TableRow({ children: [
         docxCell(String(i + 1), { shading: bg }),
@@ -626,7 +626,7 @@ function generateDayReportDocx(
 
   // ── JORIY SMENA ──
   if (currentShift && currentShift.startTime.startsWith(date)) {
-    const start = new Date(currentShift.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })
+    const start = formatTimeTashkent(currentShift.startTime)
     children.push(docxSectionTitle('JORIY SMENA (yopilmagan)', AMBER_COLOR))
     children.push(new Table({
       rows: [
@@ -709,11 +709,11 @@ function generateShiftReportDocx(shift: ShiftLogType, shiftTransactions: Transac
       new TableRow({ children: [
         new TableCell({ children: [new Paragraph({ children: [
           new TextRun({ text: 'Boshlanish: ', color: '9CA3AF', size: 20, font: 'Segoe UI' }),
-          new TextRun({ text: new Date(shift.startTime).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }), color: '374151', size: 20, font: 'Segoe UI' }),
+          new TextRun({ text: formatDateTimeTashkent(shift.startTime), color: '374151', size: 20, font: 'Segoe UI' }),
         ] })], borders: noBorders }),
         new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [
           new TextRun({ text: 'Tugash: ', color: '9CA3AF', size: 20, font: 'Segoe UI' }),
-          new TextRun({ text: shift.endTime ? new Date(shift.endTime).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : 'Hali yopilmagan', color: '374151', size: 20, font: 'Segoe UI' }),
+          new TextRun({ text: shift.endTime ? formatDateTimeTashkent(shift.endTime) : 'Hali yopilmagan', color: '374151', size: 20, font: 'Segoe UI' }),
         ] })], borders: noBorders }),
       ] }),
     ],
@@ -858,8 +858,8 @@ export default function ShiftReport() {
   const [showClose, setShowClose] = useState(false)
   const [closeNotes, setCloseNotes] = useState('')
   const [expandedShift, setExpandedShift] = useState<string | null>(null)
-  const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0])
-  const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7))
+  const [reportDate, setReportDate] = useState(() => todayTashkent())
+  const [reportMonth, setReportMonth] = useState(() => currentMonthTashkent())
   const [zipping, setZipping] = useState(false)
   const [closedDates, setClosedDates] = useState<Record<string, { admin_name: string; closed_at: string }>>({})
   const [closing, setClosing] = useState(false)
@@ -877,7 +877,7 @@ export default function ShiftReport() {
     try {
       const reportText = generateDayReport(reportDate, transactions, shifts, rooms, currentShift)
       await api.closeDailyReport(reportDate, reportText)
-      setClosedDates(prev => ({ ...prev, [reportDate]: { admin_name: 'Siz', closed_at: new Date().toISOString() } }))
+      setClosedDates(prev => ({ ...prev, [reportDate]: { admin_name: 'Siz', closed_at: todayTashkent() + 'T' + nowTimeTashkent() } }))
     } catch (err: any) {
       console.error('Kunni yopishda xatolik:', err)
       alert('Kunni yopishda xatolik: ' + (err?.message || 'Noma\'lum xato'))
@@ -903,9 +903,10 @@ export default function ShiftReport() {
     downloadBlob(blob, `Smena_${shift.admin}_${dateStr}.docx`)
   }
 
-  const minDate = new Date()
-  minDate.setDate(minDate.getDate() - 30)
-  const minDateStr = minDate.toISOString().split('T')[0]
+  const today = todayTashkent()
+  const [ty, tm, td] = today.split('-').map(Number)
+  const minDateObj = new Date(ty, tm - 1, td - 30)
+  const minDateStr = `${minDateObj.getFullYear()}-${String(minDateObj.getMonth() + 1).padStart(2, '0')}-${String(minDateObj.getDate()).padStart(2, '0')}`
 
   const downloadDayReport = async () => {
     const doc = generateDayReportDocx(reportDate, transactions, shifts, rooms, currentShift)
@@ -1020,7 +1021,7 @@ export default function ShiftReport() {
                 type="date"
                 value={reportDate}
                 min={minDateStr}
-                max={new Date().toISOString().split('T')[0]}
+                max={todayTashkent()}
                 onChange={e => setReportDate(e.target.value)}
                 className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/30 transition-all"
               />
@@ -1121,7 +1122,7 @@ export default function ShiftReport() {
               <div>
                 <h3 className="font-semibold">Joriy smena</h3>
                 <p className="text-xs text-white/30">
-                  {currentShift.admin} • {new Date(currentShift.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })} dan boshlab
+                  {currentShift.admin} • {formatTimeTashkent(currentShift.startTime)} dan boshlab
                 </p>
               </div>
             </div>
@@ -1221,9 +1222,9 @@ export default function ShiftReport() {
                       <div className="text-left">
                         <p className="text-sm font-medium">{shift.admin}</p>
                         <p className="text-[11px] text-white/25">
-                          {new Date(shift.startTime).toLocaleDateString('uz-UZ', { timeZone: 'Asia/Tashkent' })} •{' '}
-                          {new Date(shift.startTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })}
-                          {shift.endTime && ` — ${new Date(shift.endTime).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' })}`}
+                          {formatDateTashkent(shift.startTime)} •{' '}
+                          {formatTimeTashkent(shift.startTime)}
+                          {shift.endTime && ` — ${formatTimeTashkent(shift.endTime)}`}
                         </p>
                       </div>
                     </div>

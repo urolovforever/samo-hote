@@ -503,13 +503,28 @@ app.post('/api/bookings', authMiddleware, (req, res) => {
       if (!room) throw new Error('NOT_FOUND:Xona topilmadi');
       if (room.status !== 'available') throw new Error(`CONFLICT:Xona ${room_number} hozir band (${room.status}). Faqat bo'sh xonaga bron qilish mumkin.`);
 
+      const prepaymentAmount = Number(prepayment) || 0;
+
       db.prepare(
         'INSERT INTO bookings (id, room_number, guest_name, guest_phone, check_in_date, check_out_date, nights, notes, created_by, prepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(id, room_number, sanitizeString(guest_name, 200), sanitizeString(guest_phone, 30), check_in_date, check_out_date || null, nightCount, sanitizeString(notes || ''), req.admin.name, Number(prepayment) || 0);
+      ).run(id, room_number, sanitizeString(guest_name, 200), sanitizeString(guest_phone, 30), check_in_date, check_out_date || null, nightCount, sanitizeString(notes || ''), req.admin.name, prepaymentAmount);
 
       db.prepare('UPDATE rooms SET status = ?, guest_name = ?, guest_phone = ?, check_out = ?, booking_id = ?, notes = ? WHERE number = ?').run(
         'booked', sanitizeString(guest_name, 200), sanitizeString(guest_phone, 30), check_in_date, id, `Bron: ${check_in_date} dan`, room_number
       );
+
+      // Oldindan to'lovni kirimga qo'shish
+      if (prepaymentAmount > 0) {
+        const txDate = nowLocal();
+        const shift_id = req.body.shift_id || null;
+        db.prepare(
+          'INSERT INTO transactions (type, category, amount, description, room_number, admin_name, shift_id, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run('income', 'Oldindan to\'lov', prepaymentAmount, `${room_number}-xona, ${sanitizeString(guest_name, 200)} - oldindan to'lov (bron)`, room_number, req.admin.name, shift_id, txDate);
+
+        if (shift_id) {
+          db.prepare('UPDATE shifts SET total_income = total_income + ? WHERE id = ?').run(prepaymentAmount, shift_id);
+        }
+      }
     });
 
     try {
@@ -611,10 +626,23 @@ app.put('/api/bookings/:id/cancel', authMiddleware, (req, res) => {
     const doCancel = db.transaction(() => {
       db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run('cancelled', id);
       db.prepare('UPDATE rooms SET status = ?, guest_name = NULL, guest_phone = NULL, check_out = NULL, booking_id = NULL, notes = NULL WHERE number = ?').run('available', booking.room_number);
+
+      // Oldindan to'lovni qaytarish (chiqimga yozish)
+      if (booking.prepayment > 0) {
+        const txDate = nowLocal();
+        const shift_id = req.body.shift_id || null;
+        db.prepare(
+          'INSERT INTO transactions (type, category, amount, description, room_number, admin_name, shift_id, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run('expense', 'Bron qaytarish', booking.prepayment, `${booking.room_number}-xona, ${booking.guest_name} - oldindan to'lov qaytarildi (bron bekor)`, booking.room_number, req.admin.name, shift_id, txDate);
+
+        if (shift_id) {
+          db.prepare('UPDATE shifts SET total_expense = total_expense + ? WHERE id = ?').run(booking.prepayment, shift_id);
+        }
+      }
     });
 
     doCancel();
-    logActivity(db, req.admin.name, 'booking_cancel', `Bron bekor qilindi: ${booking.room_number}-xona, ${booking.guest_name}`, booking.room_number, null);
+    logActivity(db, req.admin.name, 'booking_cancel', `Bron bekor qilindi: ${booking.room_number}-xona, ${booking.guest_name}`, booking.room_number, booking.prepayment || null);
     res.json({ success: true });
   } finally {
     db.close();
@@ -634,12 +662,15 @@ app.put('/api/bookings/:id/checkin', authMiddleware, (req, res) => {
     if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
 
     const nightCount = Math.max(1, Number(nights) || 1);
-    const total = (typeof total_price === 'number' && total_price > 0) ? total_price : (nightCount * room.price_per_night);
+    const fullTotal = (typeof total_price === 'number' && total_price > 0) ? total_price : (nightCount * room.price_per_night);
+    const prepaid = booking.prepayment || 0;
+    const remaining = Math.max(0, fullTotal - prepaid);
 
     // Chiqish sanasini hisoblash
     const checkInTime = date ? new Date(date) : new Date();
     checkInTime.setDate(checkInTime.getDate() + nightCount);
-    const checkOutDate = booking.check_out_date || checkInTime.toISOString().split('T')[0];
+    const pad = (n) => String(n).padStart(2, '0');
+    const checkOutDate = booking.check_out_date || `${checkInTime.getFullYear()}-${pad(checkInTime.getMonth() + 1)}-${pad(checkInTime.getDate())}`;
 
     const shift_id = req.body.shift_id || null;
     const txDate = date || nowLocal();
@@ -652,18 +683,21 @@ app.put('/api/bookings/:id/checkin', authMiddleware, (req, res) => {
         'occupied', booking.guest_name, booking.guest_phone, sanitizeString(passport || ''), nowLocal(), checkOutDate, booking.room_number
       );
 
-      db.prepare('INSERT INTO transactions (type, category, amount, description, room_number, admin_name, shift_id, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
-        'income', 'Xona to\'lovi', total, `${booking.room_number}-xona, ${booking.guest_name}, ${nightCount} kecha (bron)`, booking.room_number, req.admin.name, shift_id, txDate
-      );
+      // Faqat qoldiq to'lovni kirimga qo'shish (oldindan to'lov allaqachon bron paytida kirimga yozilgan)
+      if (remaining > 0) {
+        db.prepare('INSERT INTO transactions (type, category, amount, description, room_number, admin_name, shift_id, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+          'income', 'Xona to\'lovi', remaining, `${booking.room_number}-xona, ${booking.guest_name}, ${nightCount} kecha (bron, qoldiq to'lov)`, booking.room_number, req.admin.name, shift_id, txDate
+        );
 
-      if (shift_id) {
-        db.prepare('UPDATE shifts SET total_income = total_income + ? WHERE id = ?').run(total, shift_id);
+        if (shift_id) {
+          db.prepare('UPDATE shifts SET total_income = total_income + ? WHERE id = ?').run(remaining, shift_id);
+        }
       }
     });
 
     doCheckIn();
-    logActivity(db, req.admin.name, 'checkin_from_booking', `Brondan joylashtirish: ${booking.room_number}-xona, ${booking.guest_name}, ${total} so'm`, booking.room_number, total);
-    res.json({ success: true, total });
+    logActivity(db, req.admin.name, 'checkin_from_booking', `Brondan joylashtirish: ${booking.room_number}-xona, ${booking.guest_name}, jami: ${fullTotal}, oldindan: ${prepaid}, qoldiq: ${remaining} so'm`, booking.room_number, fullTotal);
+    res.json({ success: true, remaining, fullTotal, prepaid });
   } finally {
     db.close();
   }

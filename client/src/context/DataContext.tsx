@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { Room, Transaction, ShiftLog, Booking } from '../types'
+import { parseTashkentDate } from '../types'
 import { api } from '../lib/api'
 import { useAuth } from './AuthContext'
 
@@ -59,7 +60,7 @@ function mapShift(s: any): ShiftLog {
   return {
     id: String(s.id),
     admin: s.admin_name || '',
-    shift: s.start_time ? new Date(s.start_time).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '',
+    shift: s.start_time ? parseTashkentDate(s.start_time).toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }) : '',
     startTime: s.start_time || '',
     endTime: s.end_time || undefined,
     totalIncome: s.total_income || 0,
@@ -205,30 +206,54 @@ export function DataProvider({ children }: { children: ReactNode }) {
         nights: booking.nights,
         notes: booking.notes,
         prepayment: booking.prepayment || 0,
+        shift_id: currentShift?.id || null,
       })
 
       setBookings(prev => [mapBooking(result), ...prev])
 
-      // Refresh rooms
-      const roomsData = await api.getRooms()
+      // Oldindan to'lov bo'lsa shift totalini yangilash
+      if (booking.prepayment && booking.prepayment > 0 && currentShift) {
+        const updated = {
+          ...currentShift,
+          totalIncome: currentShift.totalIncome + booking.prepayment,
+        }
+        setCurrentShift(updated)
+        localStorage.setItem('samo_shift', JSON.stringify(updated))
+      }
+
+      // Refresh rooms and transactions
+      const [roomsData, txData] = await Promise.all([api.getRooms(), api.getTransactions()])
       setRooms(roomsData.map(mapRoom))
+      setTransactions(txData.map(mapTransaction))
     } catch (err: any) {
       throw new Error(err.message || 'Bron qilishda xatolik')
     }
-  }, [])
+  }, [currentShift, setCurrentShift])
 
   const cancelBooking = useCallback(async (id: string) => {
     try {
-      await api.cancelBooking(id)
+      const booking = bookings.find(b => b.id === id)
+      await api.cancelBooking(id, currentShift?.id || null)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b))
 
-      // Refresh rooms
-      const roomsData = await api.getRooms()
+      // Oldindan to'lov qaytarilsa shift totalini yangilash
+      if (booking && booking.prepayment > 0 && currentShift) {
+        const updated = {
+          ...currentShift,
+          totalExpense: currentShift.totalExpense + booking.prepayment,
+        }
+        setCurrentShift(updated)
+        localStorage.setItem('samo_shift', JSON.stringify(updated))
+      }
+
+      // Refresh rooms and transactions
+      const [roomsData, txData] = await Promise.all([api.getRooms(), api.getTransactions()])
       setRooms(roomsData.map(mapRoom))
+      setTransactions(txData.map(mapTransaction))
     } catch (err: any) {
       throw new Error(err.message || 'Bekor qilishda xatolik')
     }
-  }, [])
+  }, [bookings, currentShift, setCurrentShift])
 
   const checkInFromBooking = useCallback(async (id: string, passport: string, nights: number, date?: string, totalPrice?: number) => {
     try {

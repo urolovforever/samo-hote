@@ -90,8 +90,8 @@ export const api = {
     request<any>('/bookings', { method: 'POST', body: JSON.stringify(data) }),
   updateBooking: (id: string, data: Record<string, any>) =>
     request<any>(`/bookings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  cancelBooking: (id: string) =>
-    request<any>(`/bookings/${id}/cancel`, { method: 'PUT' }),
+  cancelBooking: (id: string, shiftId?: string | null) =>
+    request<any>(`/bookings/${id}/cancel`, { method: 'PUT', body: JSON.stringify({ shift_id: shiftId || null }) }),
   checkInFromBooking: (id: string, data: Record<string, any>) =>
     request<any>(`/bookings/${id}/checkin`, { method: 'PUT', body: JSON.stringify(data) }),
 
