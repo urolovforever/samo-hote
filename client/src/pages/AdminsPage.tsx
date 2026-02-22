@@ -79,8 +79,8 @@ export default function AdminsPage() {
       setPwError('Barcha maydonlarni to\'ldiring')
       return
     }
-    if (pwForm.newPassword.length < 4) {
-      setPwError('Yangi parol kamida 4 belgi bo\'lishi kerak')
+    if (pwForm.newPassword.length < 8) {
+      setPwError('Yangi parol kamida 8 belgi bo\'lishi kerak')
       return
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
@@ -451,7 +451,7 @@ export default function AdminsPage() {
                   type="password"
                   value={pwForm.newPassword}
                   onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })}
-                  placeholder="Yangi parol (kamida 4 belgi)"
+                  placeholder="Yangi parol (kamida 8 belgi)"
                   className="w-full bg-[#0f1117] border border-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/30"
                 />
               </div>

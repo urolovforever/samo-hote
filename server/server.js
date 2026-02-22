@@ -9,7 +9,7 @@ const { exec } = require('child_process');
 require('dotenv').config();
 
 const { getDb, initDb } = require('./database');
-const { generateToken, authMiddleware, superAdminMiddleware } = require('./auth');
+const { generateToken, revokeToken, revokeAllTokensForAdmin, authMiddleware, superAdminMiddleware } = require('./auth');
 
 initDb();
 
@@ -55,50 +55,99 @@ function sanitizeString(str, maxLen = 500) {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Rate limiting for login
-const loginAttempts = new Map();
-const LOGIN_WINDOW = 15 * 60 * 1000; // 15 min
-const MAX_ATTEMPTS = 10;
+// Rate limiting
+const rateLimitStore = new Map(); // key = "type:ip" -> { count, firstAttempt }
 
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const record = loginAttempts.get(ip);
-  if (!record) return true;
-  // Clean old entries
-  if (now - record.firstAttempt > LOGIN_WINDOW) {
-    loginAttempts.delete(ip);
-    return true;
-  }
-  return record.count < MAX_ATTEMPTS;
+function rateLimiter(type, windowMs, maxRequests) {
+  return (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const key = `${type}:${ip}`;
+    const now = Date.now();
+    const record = rateLimitStore.get(key);
+
+    if (record && now - record.firstAttempt < windowMs) {
+      if (record.count >= maxRequests) {
+        const retryAfter = Math.ceil((windowMs - (now - record.firstAttempt)) / 1000);
+        res.set('Retry-After', String(retryAfter));
+        return res.status(429).json({ error: `Juda ko'p so'rov. ${retryAfter} sekunddan keyin qayta urinib ko'ring.` });
+      }
+      record.count++;
+    } else {
+      rateLimitStore.set(key, { count: 1, firstAttempt: now });
+    }
+    next();
+  };
 }
 
-function recordAttempt(ip) {
+// Rate limit konfiguratsiyalari
+const loginLimiter = rateLimiter('login', 15 * 60 * 1000, 10);    // 10 ta/15 daqiqa
+const writeLimiter = rateLimiter('write', 60 * 1000, 60);          // 60 ta/daqiqa (POST/PUT/DELETE)
+const readLimiter = rateLimiter('read', 60 * 1000, 200);           // 200 ta/daqiqa (GET)
+
+// Eski rateLimitStore ni tozalash (har 10 daqiqada)
+setInterval(() => {
   const now = Date.now();
-  const record = loginAttempts.get(ip);
-  if (!record || now - record.firstAttempt > LOGIN_WINDOW) {
-    loginAttempts.set(ip, { count: 1, firstAttempt: now });
-  } else {
-    record.count++;
+  for (const [key, record] of rateLimitStore) {
+    if (now - record.firstAttempt > 15 * 60 * 1000) {
+      rateLimitStore.delete(key);
+    }
   }
-}
+}, 10 * 60 * 1000);
 
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
   : undefined;
 
-app.use(cors(allowedOrigins ? { origin: allowedOrigins } : undefined));
+app.use(cors(allowedOrigins ? { origin: allowedOrigins, credentials: true } : undefined));
 app.use(express.json({ limit: '2mb' }));
+
+// CSRF himoyasi: POST/PUT/DELETE so'rovlarda Origin/Referer tekshiruvi
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  // Webhook endpointni o'tkazib yuborish (tashqi GitHub so'rov)
+  if (req.path === '/webhook/github') return next();
+
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  const host = req.headers.host;
+
+  // Agar origin yoki referer bor bo'lsa, host bilan mos kelishini tekshirish
+  if (origin) {
+    try {
+      const originHost = new URL(origin).host;
+      if (originHost !== host) {
+        return res.status(403).json({ error: 'Ruxsat berilmagan origin' });
+      }
+    } catch {
+      return res.status(403).json({ error: 'Noto\'g\'ri origin' });
+    }
+  } else if (referer) {
+    try {
+      const refHost = new URL(referer).host;
+      if (refHost !== host) {
+        return res.status(403).json({ error: 'Ruxsat berilmagan referer' });
+      }
+    } catch {
+      return res.status(403).json({ error: 'Noto\'g\'ri referer' });
+    }
+  }
+  // Agar origin ham referer ham yo'q bo'lsa — same-origin (fetch/XHR) yoki server-to-server
+  next();
+});
 
 // Serve static frontend in production
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// ============ AUTH ============
-app.post('/api/auth/login', (req, res) => {
-  const ip = req.ip || req.connection.remoteAddress;
-  if (!checkRateLimit(ip)) {
-    return res.status(429).json({ error: 'Juda ko\'p urinish. 15 daqiqadan keyin qayta urinib ko\'ring.' });
+// Rate limiter middleware barcha route larga
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return readLimiter(req, res, next);
   }
+  return writeLimiter(req, res, next);
+});
 
+// ============ AUTH ============
+app.post('/api/auth/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username va parol kerak' });
@@ -106,10 +155,9 @@ app.post('/api/auth/login', (req, res) => {
 
   const db = getDb();
   try {
-    const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username);
+    const admin = db.prepare('SELECT * FROM admins WHERE username = ? AND deleted_at IS NULL').get(username);
 
     if (!admin || !bcrypt.compareSync(password, admin.password)) {
-      recordAttempt(ip);
       return res.status(401).json({ error: 'Login yoki parol noto\'g\'ri' });
     }
 
@@ -124,7 +172,7 @@ app.post('/api/auth/login', (req, res) => {
 app.get('/api/admins', authMiddleware, superAdminMiddleware, (req, res) => {
   const db = getDb();
   try {
-    const admins = db.prepare('SELECT id, name, username, role, created_at FROM admins ORDER BY id').all();
+    const admins = db.prepare('SELECT id, name, username, role, created_at FROM admins WHERE deleted_at IS NULL ORDER BY id').all();
     res.json(admins);
   } finally {
     db.close();
@@ -136,8 +184,8 @@ app.post('/api/admins', authMiddleware, superAdminMiddleware, (req, res) => {
   if (!name || !username || !password) {
     return res.status(400).json({ error: 'Ism, username va parol kerak' });
   }
-  if (password.length < 4) {
-    return res.status(400).json({ error: 'Parol kamida 4 belgi bo\'lishi kerak' });
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Parol kamida 8 belgi bo\'lishi kerak' });
   }
   const adminRole = role === 'super_admin' ? 'super_admin' : 'admin';
   const hash = bcrypt.hashSync(password, 12);
@@ -167,7 +215,7 @@ app.delete('/api/admins/:id', authMiddleware, superAdminMiddleware, (req, res) =
   }
   const db = getDb();
   try {
-    const admin = db.prepare('SELECT id, name FROM admins WHERE id = ?').get(id);
+    const admin = db.prepare('SELECT id, name FROM admins WHERE id = ? AND deleted_at IS NULL').get(id);
     if (!admin) {
       return res.status(404).json({ error: 'Admin topilmadi' });
     }
@@ -175,7 +223,8 @@ app.delete('/api/admins/:id', authMiddleware, superAdminMiddleware, (req, res) =
     db.prepare('UPDATE shifts SET end_time = ?, closed = 1, notes = ? WHERE admin_name = ? AND closed = 0').run(
       nowLocal(), 'Admin o\'chirilgani sababli avtomatik yopildi', admin.name
     );
-    db.prepare('DELETE FROM admins WHERE id = ?').run(id);
+    // Soft delete: mark as deleted instead of removing
+    db.prepare('UPDATE admins SET deleted_at = ? WHERE id = ?').run(nowLocal(), id);
     logActivity(db, req.admin.name, 'admin_delete', `Admin o'chirildi: ${admin.name}`, null, null);
     res.json({ success: true });
   } finally {
@@ -189,8 +238,8 @@ app.put('/api/admins/password', authMiddleware, (req, res) => {
   if (!oldPassword || !newPassword) {
     return res.status(400).json({ error: 'Eski va yangi parol kerak' });
   }
-  if (newPassword.length < 4) {
-    return res.status(400).json({ error: 'Yangi parol kamida 4 belgi bo\'lishi kerak' });
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'Yangi parol kamida 8 belgi bo\'lishi kerak' });
   }
   const db = getDb();
   try {
@@ -201,8 +250,15 @@ app.put('/api/admins/password', authMiddleware, (req, res) => {
     }
     const hash = bcrypt.hashSync(newPassword, 12);
     db.prepare('UPDATE admins SET password = ? WHERE id = ?').run(hash, req.admin.id);
+    // Barcha eski tokenlarni bekor qilish
+    revokeAllTokensForAdmin(req.admin.id);
+    // Joriy tokenni ham bekor qilish
+    if (req.token) revokeToken(req.token);
     logActivity(db, req.admin.name, 'password_change', 'Parol o\'zgartirildi', null, null);
-    res.json({ success: true });
+    // Yangi token berish
+    const updatedAdmin = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.admin.id);
+    const newToken = generateToken(updatedAdmin);
+    res.json({ success: true, token: newToken });
   } finally {
     db.close();
   }
@@ -235,6 +291,21 @@ app.put('/api/rooms/:id', authMiddleware, (req, res) => {
     const validStatuses = ['available', 'occupied', 'cleaning', 'maintenance', 'booked'];
     if (updates.status && !validStatuses.includes(updates.status)) {
       return res.status(400).json({ error: 'Noto\'g\'ri xona holati' });
+    }
+
+    // Status o'tish qoidalari
+    if (updates.status && updates.status !== existing.status) {
+      const allowedTransitions = {
+        available:   ['occupied', 'cleaning', 'maintenance', 'booked'],
+        occupied:    ['available', 'cleaning'],
+        cleaning:    ['available', 'maintenance'],
+        maintenance: ['available', 'cleaning'],
+        booked:      ['occupied', 'available'],
+      };
+      const allowed = allowedTransitions[existing.status] || [];
+      if (!allowed.includes(updates.status)) {
+        return res.status(400).json({ error: `Xona "${existing.status}" dan "${updates.status}" ga o'tkazib bo'lmaydi` });
+      }
     }
 
     // Validate price
@@ -305,8 +376,8 @@ app.post('/api/transactions', authMiddleware, (req, res) => {
   if (!category || typeof category !== 'string' || !category.trim()) {
     return res.status(400).json({ error: 'Kategoriya kerak' });
   }
-  if (typeof amount !== 'number' || amount <= 0) {
-    return res.status(400).json({ error: 'Summa 0 dan katta bo\'lishi kerak' });
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || amount > 1_000_000_000_000) {
+    return res.status(400).json({ error: 'Summa 0 dan katta va 1 trillion dan kam bo\'lishi kerak' });
   }
   if (!description || typeof description !== 'string' || !description.trim()) {
     return res.status(400).json({ error: 'Tavsif kerak' });
@@ -514,7 +585,17 @@ app.post('/api/bookings', authMiddleware, (req, res) => {
   if (check_out_date && check_out_date <= check_in_date) {
     return res.status(400).json({ error: 'Ketish sanasi kelish sanasidan keyin bo\'lishi kerak' });
   }
+  // Sana oraliq tekshiruvi: max 1 yil kelajakka
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() + 1);
+  const maxDateStr = maxDate.toISOString().split('T')[0];
+  if (check_in_date > maxDateStr) {
+    return res.status(400).json({ error: 'Kelish sanasi 1 yildan koproq kelajakda bo\'lishi mumkin emas' });
+  }
   const nightCount = Math.max(1, Number(nights) || 1);
+  if (nightCount > 365) {
+    return res.status(400).json({ error: 'Tunlar soni 365 dan oshmasligi kerak' });
+  }
 
   const id = Date.now().toString();
   const db = getDb();
@@ -576,18 +657,18 @@ app.put('/api/bookings/:id', authMiddleware, (req, res) => {
     const doEdit = db.transaction(() => {
       const newRoomNumber = room_number || booking.room_number;
 
-      // If room changed, release old room and book new one
+      // If room changed, check new room first, then release old room
       if (room_number && room_number !== booking.room_number) {
-        // Release old room
-        db.prepare('UPDATE rooms SET status = ?, guest_name = NULL, guest_phone = NULL, check_out = NULL, booking_id = NULL, notes = NULL WHERE number = ?')
-          .run('available', booking.room_number);
-
-        // Check new room is available
+        // AVVAL yangi xonani tekshirish (eski xonani bo'shatishdan OLDIN)
         const newRoom = db.prepare('SELECT * FROM rooms WHERE number = ?').get(room_number);
         if (!newRoom) throw new Error('NOT_FOUND:Xona topilmadi');
         if (newRoom.status !== 'available') throw new Error(`CONFLICT:Xona ${room_number} band (${newRoom.status})`);
 
-        // Book new room
+        // Endi eski xonani bo'shatish (yangi xona mavjud va bo'sh ekanligi tasdiqlangan)
+        db.prepare('UPDATE rooms SET status = ?, guest_name = NULL, guest_phone = NULL, check_out = NULL, booking_id = NULL, notes = NULL WHERE number = ?')
+          .run('available', booking.room_number);
+
+        // Yangi xonani band qilish
         const gn = guest_name ? sanitizeString(guest_name, 200) : booking.guest_name;
         const gp = guest_phone ? sanitizeString(guest_phone, 30) : booking.guest_phone;
         const ci = check_in_date || booking.check_in_date;
@@ -865,6 +946,9 @@ app.post('/api/reports/daily/:date/close', authMiddleware, (req, res) => {
   if (!report_text) {
     return res.status(400).json({ error: 'report_text kerak' });
   }
+  if (typeof report_text !== 'string' || report_text.length > 500_000) {
+    return res.status(400).json({ error: 'Hisobot matni juda katta (max 500KB)' });
+  }
   const db = getDb();
   try {
     // Calculate day totals from transactions
@@ -922,7 +1006,12 @@ app.post('/webhook/github', express.raw({ type: 'application/json' }), (req, res
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
-  const payload = JSON.parse(body);
+  let payload;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON payload' });
+  }
   const event = req.headers['x-github-event'];
 
   if (event !== 'push' || payload.ref !== 'refs/heads/main') {
@@ -947,6 +1036,23 @@ app.post('/webhook/github', express.raw({ type: 'application/json' }), (req, res
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+// Global Express error handler
+app.use((err, req, res, _next) => {
+  console.error(`[${new Date().toISOString()}] Unhandled error:`, err.message || err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Serverda kutilmagan xatolik yuz berdi' });
+  }
+});
+
+// Process-level error handlers
+process.on('uncaughtException', (err) => {
+  console.error(`[${new Date().toISOString()}] Uncaught Exception:`, err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[${new Date().toISOString()}] Unhandled Rejection:`, reason);
 });
 
 app.listen(PORT, () => {

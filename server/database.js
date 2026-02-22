@@ -122,6 +122,13 @@ function initDb() {
     // Column already exists — ignore
   }
 
+  // Migration: add deleted_at column to admins (soft delete)
+  try {
+    db.exec(`ALTER TABLE admins ADD COLUMN deleted_at DATETIME DEFAULT NULL`);
+  } catch (e) {
+    // Column already exists — ignore
+  }
+
   // Migration: add total_income/total_expense columns to daily_reports
   try {
     db.exec(`ALTER TABLE daily_reports ADD COLUMN total_income INTEGER DEFAULT 0`);

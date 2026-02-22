@@ -26,7 +26,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE}${path}`, { ...options, headers });
+  // 30 sekund timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, { ...options, headers, signal: controller.signal });
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error('So\'rov vaqti tugadi. Internet aloqangizni tekshiring.');
+    }
+    throw new Error('Serverga ulanib bo\'lmadi. Internet aloqangizni tekshiring.');
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (res.status === 401) {
     clearToken();

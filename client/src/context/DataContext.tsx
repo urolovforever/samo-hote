@@ -111,7 +111,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       // Sync current shift totals from server data
       if (currentShift) {
+        // Serverdan joriy shift ni topish (yopilmagan)
         const serverShift = shiftsData.find((s: any) => String(s.id) === currentShift.id && !s.closed)
+        // Yopilgan shift lardan ham tekshirish
+        const closedOnServer = !serverShift && shiftsData.find((s: any) => String(s.id) === currentShift.id && s.closed)
+
         if (serverShift) {
           const updated = {
             ...currentShift,
@@ -121,7 +125,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setCurrentShift(updated)
           localStorage.setItem('samo_shift', JSON.stringify(updated))
         } else {
-          // Shift not found on server (deleted admin or already closed) — clear stale state
+          // Shift serverda topilmadi yoki yopilgan — local state ni tozalash
+          if (closedOnServer) {
+            console.warn('Shift boshqa joyda yopilgan, local state tozalanmoqda')
+          }
           setCurrentShift(null)
           localStorage.removeItem('samo_shift')
         }
@@ -221,10 +228,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('samo_shift', JSON.stringify(updated))
       }
 
-      // Refresh rooms and transactions
-      const [roomsData, txData] = await Promise.all([api.getRooms(), api.getTransactions()])
-      setRooms(roomsData.map(mapRoom))
-      setTransactions(txData.map(mapTransaction))
+      // Refresh rooms and transactions in background (non-blocking)
+      Promise.all([api.getRooms(), api.getTransactions()]).then(([roomsData, txData]) => {
+        setRooms(roomsData.map(mapRoom))
+        setTransactions(txData.map(mapTransaction))
+      }).catch(() => {})
     } catch (err: any) {
       throw new Error(err.message || 'Bron qilishda xatolik')
     }
@@ -246,10 +254,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('samo_shift', JSON.stringify(updated))
       }
 
-      // Refresh rooms and transactions
-      const [roomsData, txData] = await Promise.all([api.getRooms(), api.getTransactions()])
-      setRooms(roomsData.map(mapRoom))
-      setTransactions(txData.map(mapTransaction))
+      // Refresh rooms and transactions in background (non-blocking)
+      Promise.all([api.getRooms(), api.getTransactions()]).then(([roomsData, txData]) => {
+        setRooms(roomsData.map(mapRoom))
+        setTransactions(txData.map(mapTransaction))
+      }).catch(() => {})
     } catch (err: any) {
       throw new Error(err.message || 'Bekor qilishda xatolik')
     }
@@ -280,12 +289,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await api.deleteTransaction(id)
       setTransactions(prev => prev.filter(t => t.id !== id))
 
-      // Update current shift totals locally
+      // Update current shift totals locally (manfiy bo'lmasligi kerak)
       if (tx && currentShift && tx.shift === currentShift.id) {
         const updated = {
           ...currentShift,
-          totalIncome: currentShift.totalIncome - (tx.type === 'income' ? tx.amount : 0),
-          totalExpense: currentShift.totalExpense - (tx.type === 'expense' ? tx.amount : 0),
+          totalIncome: Math.max(0, currentShift.totalIncome - (tx.type === 'income' ? tx.amount : 0)),
+          totalExpense: Math.max(0, currentShift.totalExpense - (tx.type === 'expense' ? tx.amount : 0)),
         }
         setCurrentShift(updated)
         localStorage.setItem('samo_shift', JSON.stringify(updated))
@@ -301,13 +310,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const result = await api.updateTransaction(id, data)
       setTransactions(prev => prev.map(t => t.id === id ? mapTransaction(result) : t))
 
-      // Update current shift totals locally
+      // Update current shift totals locally (manfiy bo'lmasligi kerak)
       if (oldTx && data.amount && currentShift && oldTx.shift === currentShift.id) {
         const diff = data.amount - oldTx.amount
         const updated = {
           ...currentShift,
-          totalIncome: currentShift.totalIncome + (oldTx.type === 'income' ? diff : 0),
-          totalExpense: currentShift.totalExpense + (oldTx.type === 'expense' ? diff : 0),
+          totalIncome: Math.max(0, currentShift.totalIncome + (oldTx.type === 'income' ? diff : 0)),
+          totalExpense: Math.max(0, currentShift.totalExpense + (oldTx.type === 'expense' ? diff : 0)),
         }
         setCurrentShift(updated)
         localStorage.setItem('samo_shift', JSON.stringify(updated))
