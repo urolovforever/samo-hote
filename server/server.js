@@ -841,5 +841,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Samo Hotel server running on http://localhost:${PORT}`);
+  console.log(`Samo Hotel server v1.1 running on http://localhost:${PORT}`);
 });
