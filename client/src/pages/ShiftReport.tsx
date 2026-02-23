@@ -1020,19 +1020,19 @@ export default function ShiftReport() {
       </div>
 
       {/* Reports section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Daily report */}
-        <div className="bg-gradient-to-br from-[#1a1f2e] to-[#161923] rounded-2xl border border-amber-500/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-amber-400" />
+        <div className="bg-gradient-to-br from-[#1a1f2e] to-[#161923] rounded-2xl border border-amber-500/10 p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             </div>
             <div>
               <h3 className="font-semibold text-sm">Kunlik hisobot</h3>
-              <p className="text-[11px] text-white/25">Oxirgi 30 kun ichida</p>
+              <p className="text-[10px] sm:text-[11px] text-white/25">Oxirgi 30 kun ichida</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             <div>
               <label className="text-[10px] text-white/30 uppercase tracking-wider font-medium block mb-1.5">
                 <Calendar className="w-3 h-3 inline mr-1" />
@@ -1044,19 +1044,19 @@ export default function ShiftReport() {
                 min={minDateStr}
                 max={todayTashkent()}
                 onChange={e => setReportDate(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/30 transition-all"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white focus:outline-none focus:border-amber-500/30 transition-all"
               />
             </div>
             {closedDates[reportDate] && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 space-y-1.5">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 space-y-1">
                 <div className="flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-xs text-emerald-400 font-medium">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-[11px] sm:text-xs text-emerald-400 font-medium truncate">
                     Yopilgan — {closedDates[reportDate].admin_name}
                   </span>
                 </div>
                 {(closedDates[reportDate].total_income > 0 || closedDates[reportDate].total_expense > 0) && (
-                  <div className="flex items-center gap-3 text-[11px] pl-5.5">
+                  <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] pl-5.5 flex-wrap">
                     <span className="text-emerald-400/70">Kirim: {formatUZS(closedDates[reportDate].total_income)}</span>
                     <span className="text-red-400/70">Chiqim: {formatUZS(closedDates[reportDate].total_expense)}</span>
                   </div>
@@ -1067,26 +1067,26 @@ export default function ShiftReport() {
               <button
                 type="button"
                 onClick={downloadDayReport}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-sm"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold px-2 sm:px-5 py-2.5 sm:py-3 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-xs sm:text-sm"
               >
-                <Download className="w-4 h-4" />
-                Yuklab olish
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="truncate">Yuklab olish</span>
               </button>
               <button
                 type="button"
                 onClick={handleCloseDay}
                 disabled={closing}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-sm disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold px-2 sm:px-5 py-2.5 sm:py-3 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all text-xs sm:text-sm disabled:opacity-50"
               >
                 {closing ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Yopilmoqda...
+                    <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                    <span className="truncate">Yopilmoqda...</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="w-4 h-4" />
-                    Kunni yopish
+                    <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Kunni yopish</span>
                   </>
                 )}
               </button>
@@ -1095,17 +1095,17 @@ export default function ShiftReport() {
         </div>
 
         {/* Monthly ZIP */}
-        <div className="bg-gradient-to-br from-[#1a1f2e] to-[#161923] rounded-2xl border border-purple-500/10 p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/15 flex items-center justify-center">
-              <Archive className="w-5 h-5 text-purple-400" />
+        <div className="bg-gradient-to-br from-[#1a1f2e] to-[#161923] rounded-2xl border border-purple-500/10 p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 border border-purple-500/15 flex items-center justify-center shrink-0">
+              <Archive className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
             </div>
             <div>
               <h3 className="font-semibold text-sm">Oylik hisobot (ZIP)</h3>
-              <p className="text-[11px] text-white/25">Har kun alohida fayl + xulosa</p>
+              <p className="text-[10px] sm:text-[11px] text-white/25">Har kun alohida fayl + xulosa</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             <div>
               <label className="text-[10px] text-white/30 uppercase tracking-wider font-medium block mb-1.5">
                 <Calendar className="w-3 h-3 inline mr-1" />
@@ -1115,23 +1115,23 @@ export default function ShiftReport() {
                 type="month"
                 value={reportMonth}
                 onChange={e => setReportMonth(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/30 transition-all"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white focus:outline-none focus:border-purple-500/30 transition-all"
               />
             </div>
             <button
               type="button"
               onClick={downloadMonthlyZip}
               disabled={zipping}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all text-sm disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all text-xs sm:text-sm disabled:opacity-50"
             >
               {zipping ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
                   Tayyorlanmoqda...
                 </>
               ) : (
                 <>
-                  <Archive className="w-4 h-4" />
+                  <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   Oylik ZIP yuklash
                 </>
               )}
@@ -1142,45 +1142,43 @@ export default function ShiftReport() {
 
       {/* Active shifts for super admin */}
       {admin?.role === 'super_admin' && (
-        <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Faol smenalar</h3>
-                <p className="text-xs text-white/30">
-                  {activeShifts.length > 0 ? `${activeShifts.length} ta ochiq smena` : 'Hozirda ochiq smena yo\'q'}
-                </p>
-              </div>
+        <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">Faol smenalar</h3>
+              <p className="text-[11px] text-white/30">
+                {activeShifts.length > 0 ? `${activeShifts.length} ta ochiq smena` : 'Hozirda ochiq smena yo\'q'}
+              </p>
             </div>
           </div>
 
           {activeShifts.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {activeShifts.map(s => {
                 const sTx = transactions.filter(t => t.shift === s.id)
                 return (
-                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-xs font-bold">
+                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0">
                         {s.admin.split(' ').map(w => w[0]).join('')}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{s.admin}</p>
-                        <div className="flex items-center gap-1.5 text-white/30 text-[11px]">
-                          <Clock className="w-3 h-3" />
-                          {formatTimeTashkent(s.startTime)} dan boshlab
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] sm:text-sm font-medium truncate">{s.admin}</p>
+                        <div className="flex items-center gap-1.5 text-white/30 text-[10px] sm:text-[11px]">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{formatTimeTashkent(s.startTime)} dan boshlab</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[11px] text-emerald-400 font-medium">Faol</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[10px] sm:text-[11px] text-emerald-400 font-medium">Faol</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
                       <MiniCard label="Kirim" value={formatUZS(s.totalIncome)} color="emerald" icon={TrendingUp} />
                       <MiniCard label="Chiqim" value={formatUZS(s.totalExpense)} color="red" icon={TrendingDown} />
                       <MiniCard label="Balans" value={formatUZS(s.totalIncome - s.totalExpense)} color="amber" icon={ClipboardList} />
@@ -1190,9 +1188,9 @@ export default function ShiftReport() {
                     {sTx.length > 0 && (
                       <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-40 overflow-y-auto">
                         {sTx.map(tx => (
-                          <div key={tx.id} className="flex items-center justify-between px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-5 h-5 rounded flex items-center justify-center ${
+                          <div key={tx.id} className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 gap-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
                                 tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
                               }`}>
                                 {tx.type === 'income' ? (
@@ -1201,9 +1199,9 @@ export default function ShiftReport() {
                                   <TrendingDown className="w-2.5 h-2.5 text-red-400" />
                                 )}
                               </div>
-                              <span className="text-xs text-white/50 truncate">{tx.description}</span>
+                              <span className="text-[11px] sm:text-xs text-white/50 truncate">{tx.description}</span>
                             </div>
-                            <span className={`text-xs font-medium ml-2 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`text-[11px] sm:text-xs font-medium shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                               {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
                             </span>
                           </div>
@@ -1214,9 +1212,9 @@ export default function ShiftReport() {
                     <button
                       type="button"
                       onClick={() => downloadShiftReport(s, sTx)}
-                      className="w-full flex items-center justify-center gap-2 bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white font-medium py-2.5 rounded-xl transition-all text-xs"
+                      className="w-full flex items-center justify-center gap-1.5 sm:gap-2 bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white font-medium py-2 sm:py-2.5 rounded-xl transition-all text-[11px] sm:text-xs"
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       Hisobotni yuklab olish
                     </button>
                   </div>
@@ -1235,26 +1233,26 @@ export default function ShiftReport() {
       {/* Current shift for regular admin */}
       {admin?.role !== 'super_admin' && (
         currentShift ? (
-          <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-6 space-y-5">
+          <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-4 sm:p-6 space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">Joriy smena</h3>
-                  <p className="text-xs text-white/30">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm">Joriy smena</h3>
+                  <p className="text-[11px] text-white/30 truncate">
                     {currentShift.admin} • {formatTimeTashkent(currentShift.startTime)} dan boshlab
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-emerald-400 font-medium">Faol</span>
+                <span className="text-[11px] sm:text-xs text-emerald-400 font-medium">Faol</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
               <MiniCard label="Kirim" value={formatUZS(currentShift.totalIncome)} color="emerald" icon={TrendingUp} />
               <MiniCard label="Chiqim" value={formatUZS(currentShift.totalExpense)} color="red" icon={TrendingDown} />
               <MiniCard label="Balans" value={formatUZS(currentShift.totalIncome - currentShift.totalExpense)} color="amber" icon={ClipboardList} />
@@ -1266,9 +1264,9 @@ export default function ShiftReport() {
                 <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2">Smena operatsiyalari</p>
                 <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-60 overflow-y-auto">
                   {currentTx.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                    <div key={tx.id} className="flex items-center justify-between px-2.5 sm:px-4 py-2 sm:py-2.5 gap-2">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
                           tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
                         }`}>
                           {tx.type === 'income' ? (
@@ -1277,12 +1275,12 @@ export default function ShiftReport() {
                             <TrendingDown className="w-3 h-3 text-red-400" />
                           )}
                         </div>
-                        <div>
-                          <p className="text-xs font-medium">{tx.description}</p>
+                        <div className="min-w-0">
+                          <p className="text-[11px] sm:text-xs font-medium truncate">{tx.description}</p>
                           <p className="text-[10px] text-white/20">{tx.category}</p>
                         </div>
                       </div>
-                      <span className={`text-xs font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`text-[11px] sm:text-xs font-semibold shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                         {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
                       </span>
                     </div>
@@ -1291,26 +1289,26 @@ export default function ShiftReport() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => downloadShiftReport(currentShift, currentTx)}
-                className="flex items-center justify-center gap-2 bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white font-medium py-3.5 rounded-xl transition-all text-sm"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white font-medium py-3 sm:py-3.5 rounded-xl transition-all text-xs sm:text-sm"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Yuklab olish
               </button>
               <button
                 type="button"
                 onClick={() => setShowClose(true)}
-                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-sm"
+                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3 sm:py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-xs sm:text-sm"
               >
                 Smenani yopish
               </button>
             </div>
           </div>
         ) : (
-          <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-8 text-center">
+          <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6 sm:p-8 text-center">
             <AlertCircle className="w-10 h-10 text-white/10 mx-auto mb-3" />
             <p className="text-white/30 text-sm">Faol smena yo'q</p>
             <p className="text-white/15 text-xs mt-1">Yangi smena boshlash uchun tizimga qayta kiring</p>
@@ -1336,68 +1334,71 @@ export default function ShiftReport() {
                   <button
                     type="button"
                     onClick={() => setExpandedShift(isExpanded ? null : shift.id)}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors"
+                    className="w-full px-3 sm:px-5 py-3 sm:py-4 hover:bg-white/[0.02] transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center">
-                        <CheckCircle2 className="w-4 h-4 text-white/30" />
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.04] flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30" />
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-medium">{shift.admin}</p>
-                        <p className="text-[11px] text-white/25">
-                          {formatDateTashkent(shift.startTime)} •{' '}
-                          {formatTimeTashkent(shift.startTime)}
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="text-[13px] sm:text-sm font-medium truncate">{shift.admin}</p>
+                        <p className="text-[10px] sm:text-[11px] text-white/25 truncate">
+                          {formatDateTashkent(shift.startTime)} • {formatTimeTashkent(shift.startTime)}
                           {shift.endTime && ` — ${formatTimeTashkent(shift.endTime)}`}
                         </p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
-                        <span className="text-emerald-400">+{formatUZS(shift.totalIncome)}</span>
-                        <span className="text-red-400">-{formatUZS(shift.totalExpense)}</span>
+                      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                        <div className="hidden sm:flex items-center gap-3 text-sm">
+                          <span className="text-emerald-400">+{formatUZS(shift.totalIncome)}</span>
+                          <span className="text-red-400">-{formatUZS(shift.totalExpense)}</span>
+                        </div>
+                        <div className="flex sm:hidden flex-col items-end text-[10px]">
+                          <span className="text-emerald-400 font-medium">+{formatUZS(shift.totalIncome)}</span>
+                          <span className="text-red-400 font-medium">-{formatUZS(shift.totalExpense)}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); downloadShiftReport(shift, shiftTx) }}
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center transition-colors"
+                          title="Yuklab olish"
+                        >
+                          <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40" />
+                        </button>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-white/20" /> : <ChevronDown className="w-4 h-4 text-white/20" />}
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); downloadShiftReport(shift, shiftTx) }}
-                        className="w-8 h-8 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] flex items-center justify-center transition-colors"
-                        title="Yuklab olish"
-                      >
-                        <Download className="w-3.5 h-3.5 text-white/40" />
-                      </button>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-white/20" /> : <ChevronDown className="w-4 h-4 text-white/20" />}
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="px-5 pb-4 space-y-3 border-t border-white/[0.04] pt-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="bg-emerald-500/5 rounded-xl p-3 text-center">
-                          <p className="text-[10px] text-emerald-400/50 uppercase">Kirim</p>
-                          <p className="text-sm font-bold text-emerald-400">{formatUZS(shift.totalIncome)}</p>
+                    <div className="px-3 sm:px-5 pb-3 sm:pb-4 space-y-2.5 sm:space-y-3 border-t border-white/[0.04] pt-3">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+                        <div className="bg-emerald-500/5 rounded-xl p-2 sm:p-3 text-center">
+                          <p className="text-[9px] sm:text-[10px] text-emerald-400/50 uppercase">Kirim</p>
+                          <p className="text-xs sm:text-sm font-bold text-emerald-400 truncate">{formatUZS(shift.totalIncome)}</p>
                         </div>
-                        <div className="bg-red-500/5 rounded-xl p-3 text-center">
-                          <p className="text-[10px] text-red-400/50 uppercase">Chiqim</p>
-                          <p className="text-sm font-bold text-red-400">{formatUZS(shift.totalExpense)}</p>
+                        <div className="bg-red-500/5 rounded-xl p-2 sm:p-3 text-center">
+                          <p className="text-[9px] sm:text-[10px] text-red-400/50 uppercase">Chiqim</p>
+                          <p className="text-xs sm:text-sm font-bold text-red-400 truncate">{formatUZS(shift.totalExpense)}</p>
                         </div>
-                        <div className="bg-amber-500/5 rounded-xl p-3 text-center">
-                          <p className="text-[10px] text-amber-400/50 uppercase">Balans</p>
-                          <p className="text-sm font-bold text-amber-400">{formatUZS(shift.totalIncome - shift.totalExpense)}</p>
+                        <div className="bg-amber-500/5 rounded-xl p-2 sm:p-3 text-center">
+                          <p className="text-[9px] sm:text-[10px] text-amber-400/50 uppercase">Balans</p>
+                          <p className="text-xs sm:text-sm font-bold text-amber-400 truncate">{formatUZS(shift.totalIncome - shift.totalExpense)}</p>
                         </div>
                       </div>
 
                       {shift.notes && (
-                        <div className="bg-white/[0.02] rounded-xl p-3">
+                        <div className="bg-white/[0.02] rounded-xl p-2.5 sm:p-3">
                           <p className="text-[10px] text-white/25 uppercase mb-1">Izoh</p>
-                          <p className="text-xs text-white/50">{shift.notes}</p>
+                          <p className="text-[11px] sm:text-xs text-white/50">{shift.notes}</p>
                         </div>
                       )}
 
                       {shiftTx.length > 0 && (
                         <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-40 overflow-y-auto">
                           {shiftTx.map(tx => (
-                            <div key={tx.id} className="flex items-center justify-between px-3 py-2">
-                              <span className="text-xs text-white/40 truncate flex-1">{tx.description}</span>
-                              <span className={`text-xs font-medium ml-2 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <div key={tx.id} className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 gap-2">
+                              <span className="text-[11px] sm:text-xs text-white/40 truncate flex-1">{tx.description}</span>
+                              <span className={`text-[11px] sm:text-xs font-medium shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
                               </span>
                             </div>
@@ -1496,12 +1497,12 @@ function MiniCard({ label, value, color, icon: Icon }: {
   }
 
   return (
-    <div className={`${colors[color]} border rounded-xl p-3`}>
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <Icon className={`w-3 h-3 ${iconColors[color]}`} />
-        <span className="text-[10px] text-white/25 uppercase tracking-wider">{label}</span>
+    <div className={`${colors[color]} border rounded-lg sm:rounded-xl p-2 sm:p-3 overflow-hidden`}>
+      <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-1.5">
+        <Icon className={`w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 ${iconColors[color]}`} />
+        <span className="text-[9px] sm:text-[10px] text-white/25 uppercase tracking-wider truncate">{label}</span>
       </div>
-      <p className="text-sm font-bold text-white">{value}</p>
+      <p className="text-xs sm:text-sm font-bold text-white truncate">{value}</p>
     </div>
   )
 }
