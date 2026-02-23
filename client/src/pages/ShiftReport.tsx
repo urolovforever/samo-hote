@@ -853,8 +853,8 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export default function ShiftReport() {
-  const { rooms, transactions, shifts, closeShift } = useData()
-  const { currentShift } = useAuth()
+  const { rooms, transactions, shifts, activeShifts, closeShift } = useData()
+  const { admin, currentShift } = useAuth()
   const [showClose, setShowClose] = useState(false)
   const [closeNotes, setCloseNotes] = useState('')
   const [expandedShift, setExpandedShift] = useState<string | null>(null)
@@ -1140,88 +1140,182 @@ export default function ShiftReport() {
         </div>
       </div>
 
-      {/* Current shift */}
-      {currentShift ? (
-        <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-6 space-y-5">
+      {/* Active shifts for super admin */}
+      {admin?.role === 'super_admin' && (
+        <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="font-semibold">Joriy smena</h3>
+                <h3 className="font-semibold">Faol smenalar</h3>
                 <p className="text-xs text-white/30">
-                  {currentShift.admin} • {formatTimeTashkent(currentShift.startTime)} dan boshlab
+                  {activeShifts.length > 0 ? `${activeShifts.length} ta ochiq smena` : 'Hozirda ochiq smena yo\'q'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-emerald-400 font-medium">Faol</span>
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MiniCard label="Kirim" value={formatUZS(currentShift.totalIncome)} color="emerald" icon={TrendingUp} />
-            <MiniCard label="Chiqim" value={formatUZS(currentShift.totalExpense)} color="red" icon={TrendingDown} />
-            <MiniCard label="Balans" value={formatUZS(currentShift.totalIncome - currentShift.totalExpense)} color="amber" icon={ClipboardList} />
-            <MiniCard label="Operatsiyalar" value={currentTx.length.toString()} color="blue" icon={CheckCircle2} />
-          </div>
-
-          {currentTx.length > 0 && (
-            <div>
-              <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2">Smena operatsiyalari</p>
-              <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-60 overflow-y-auto">
-                {currentTx.map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between px-4 py-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                        tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
-                      }`}>
-                        {tx.type === 'income' ? (
-                          <TrendingUp className="w-3 h-3 text-emerald-400" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3 text-red-400" />
-                        )}
+          {activeShifts.length > 0 ? (
+            <div className="space-y-3">
+              {activeShifts.map(s => {
+                const sTx = transactions.filter(t => t.shift === s.id)
+                return (
+                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-xs font-bold">
+                        {s.admin.split(' ').map(w => w[0]).join('')}
                       </div>
-                      <div>
-                        <p className="text-xs font-medium">{tx.description}</p>
-                        <p className="text-[10px] text-white/20">{tx.category}</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{s.admin}</p>
+                        <div className="flex items-center gap-1.5 text-white/30 text-[11px]">
+                          <Clock className="w-3 h-3" />
+                          {formatTimeTashkent(s.startTime)} dan boshlab
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[11px] text-emerald-400 font-medium">Faol</span>
                       </div>
                     </div>
-                    <span className={`text-xs font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
-                    </span>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <MiniCard label="Kirim" value={formatUZS(s.totalIncome)} color="emerald" icon={TrendingUp} />
+                      <MiniCard label="Chiqim" value={formatUZS(s.totalExpense)} color="red" icon={TrendingDown} />
+                      <MiniCard label="Balans" value={formatUZS(s.totalIncome - s.totalExpense)} color="amber" icon={ClipboardList} />
+                      <MiniCard label="Operatsiyalar" value={sTx.length.toString()} color="blue" icon={CheckCircle2} />
+                    </div>
+
+                    {sTx.length > 0 && (
+                      <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-40 overflow-y-auto">
+                        {sTx.map(tx => (
+                          <div key={tx.id} className="flex items-center justify-between px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center ${
+                                tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                              }`}>
+                                {tx.type === 'income' ? (
+                                  <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
+                                ) : (
+                                  <TrendingDown className="w-2.5 h-2.5 text-red-400" />
+                                )}
+                              </div>
+                              <span className="text-xs text-white/50 truncate">{tx.description}</span>
+                            </div>
+                            <span className={`text-xs font-medium ml-2 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => downloadShiftReport(s, sTx)}
+                      className="w-full flex items-center justify-center gap-2 bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white font-medium py-2.5 rounded-xl transition-all text-xs"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Hisobotni yuklab olish
+                    </button>
                   </div>
-                ))}
-              </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <AlertCircle className="w-8 h-8 text-white/10 mx-auto mb-2" />
+              <p className="text-xs text-white/25">Hozirda hech kim smenada emas</p>
             </div>
           )}
+        </div>
+      )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => downloadShiftReport(currentShift, currentTx)}
-              className="flex items-center justify-center gap-2 bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white font-medium py-3.5 rounded-xl transition-all text-sm"
-            >
-              <Download className="w-4 h-4" />
-              Yuklab olish
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowClose(true)}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-sm"
-            >
-              Smenani yopish
-            </button>
+      {/* Current shift for regular admin */}
+      {admin?.role !== 'super_admin' && (
+        currentShift ? (
+          <div className="bg-[#161923] rounded-2xl border border-emerald-500/15 p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Joriy smena</h3>
+                  <p className="text-xs text-white/30">
+                    {currentShift.admin} • {formatTimeTashkent(currentShift.startTime)} dan boshlab
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs text-emerald-400 font-medium">Faol</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <MiniCard label="Kirim" value={formatUZS(currentShift.totalIncome)} color="emerald" icon={TrendingUp} />
+              <MiniCard label="Chiqim" value={formatUZS(currentShift.totalExpense)} color="red" icon={TrendingDown} />
+              <MiniCard label="Balans" value={formatUZS(currentShift.totalIncome - currentShift.totalExpense)} color="amber" icon={ClipboardList} />
+              <MiniCard label="Operatsiyalar" value={currentTx.length.toString()} color="blue" icon={CheckCircle2} />
+            </div>
+
+            {currentTx.length > 0 && (
+              <div>
+                <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2">Smena operatsiyalari</p>
+                <div className="bg-black/20 rounded-xl divide-y divide-white/[0.04] max-h-60 overflow-y-auto">
+                  {currentTx.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                          tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                        }`}>
+                          {tx.type === 'income' ? (
+                            <TrendingUp className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 text-red-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium">{tx.description}</p>
+                          <p className="text-[10px] text-white/20">{tx.category}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => downloadShiftReport(currentShift, currentTx)}
+                className="flex items-center justify-center gap-2 bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white font-medium py-3.5 rounded-xl transition-all text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Yuklab olish
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClose(true)}
+                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all text-sm"
+              >
+                Smenani yopish
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-white/10 mx-auto mb-3" />
-          <p className="text-white/30 text-sm">Faol smena yo'q</p>
-          <p className="text-white/15 text-xs mt-1">Yangi smena boshlash uchun tizimga qayta kiring</p>
-        </div>
+        ) : (
+          <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-8 text-center">
+            <AlertCircle className="w-10 h-10 text-white/10 mx-auto mb-3" />
+            <p className="text-white/30 text-sm">Faol smena yo'q</p>
+            <p className="text-white/15 text-xs mt-1">Yangi smena boshlash uchun tizimga qayta kiring</p>
+          </div>
+        )
       )}
 
       {/* Shift history */}

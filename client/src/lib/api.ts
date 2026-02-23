@@ -94,6 +94,7 @@ export const api = {
 
   // Shifts
   getShifts: () => request<any[]>('/shifts'),
+  getActiveShifts: () => request<any[]>('/shifts/active'),
   startShift: () => request<any>('/shifts', { method: 'POST' }),
   closeShift: (id: string, notes: string) =>
     request<any>(`/shifts/${id}/close`, { method: 'PUT', body: JSON.stringify({ notes }) }),

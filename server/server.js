@@ -531,6 +531,19 @@ app.get('/api/shifts', authMiddleware, (req, res) => {
   }
 });
 
+// Active (open) shifts
+app.get('/api/shifts/active', authMiddleware, (req, res) => {
+  const db = getDb();
+  try {
+    const activeShifts = db.prepare(
+      'SELECT * FROM shifts WHERE closed = 0 ORDER BY start_time DESC'
+    ).all();
+    res.json(activeShifts);
+  } finally {
+    db.close();
+  }
+});
+
 app.post('/api/shifts', authMiddleware, (req, res) => {
   const id = Date.now().toString();
   const db = getDb();

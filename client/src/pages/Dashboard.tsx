@@ -23,8 +23,8 @@ import {
 } from 'lucide-react'
 
 export default function Dashboard() {
-  const { rooms, transactions, bookings } = useData()
-  const { currentShift } = useAuth()
+  const { rooms, transactions, bookings, activeShifts } = useData()
+  const { admin, currentShift } = useAuth()
   const navigate = useNavigate()
 
   const { occupied, available, cleaning, maintenance, booked } = useMemo(() => ({
@@ -338,10 +338,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Current shift */}
+        {/* Current shift / Active shifts */}
         <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-white/50">Joriy smena</h3>
+            <h3 className="text-sm font-medium text-white/50">
+              {admin?.role === 'super_admin' ? 'Faol smenalar' : 'Joriy smena'}
+            </h3>
             <button
               onClick={() => navigate('/shift')}
               className="text-amber-400/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors"
@@ -349,7 +351,44 @@ export default function Dashboard() {
               Batafsil <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          {currentShift ? (
+          {admin?.role === 'super_admin' ? (
+            activeShifts.length > 0 ? (
+              <div className="space-y-3">
+                {activeShifts.map(s => (
+                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-xs font-bold">
+                        {s.admin.split(' ').map(w => w[0]).join('')}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{s.admin}</p>
+                        <div className="flex items-center gap-1.5 text-white/30 text-[11px]">
+                          <Clock className="w-3 h-3" />
+                          {formatTimeTashkent(s.startTime)} dan boshlab
+                          <span className="ml-auto flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-emerald-400/70">Faol</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-black/20 rounded-lg p-2 text-center">
+                        <p className="text-[9px] text-emerald-400/50 uppercase">Kirim</p>
+                        <p className="text-sm font-bold text-emerald-400">{formatUZS(s.totalIncome)}</p>
+                      </div>
+                      <div className="bg-black/20 rounded-lg p-2 text-center">
+                        <p className="text-[9px] text-red-400/50 uppercase">Chiqim</p>
+                        <p className="text-sm font-bold text-red-400">{formatUZS(s.totalExpense)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/20 text-sm">Hozirda faol smena yo'q</p>
+            )
+          ) : currentShift ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-sm font-bold">
