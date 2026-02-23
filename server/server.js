@@ -47,7 +47,7 @@ function isDayClosed(db, dateStr) {
 function sanitizeString(str, maxLen = 500) {
   if (typeof str !== 'string') return '';
   return str
-    .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c))
+    .replace(/[<>]/g, '')
     .trim()
     .slice(0, maxLen);
 }

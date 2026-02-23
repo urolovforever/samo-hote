@@ -141,6 +141,24 @@ function initDb() {
     // Column already exists — ignore
   }
 
+  // Migration: fix HTML-encoded apostrophes in existing data
+  const htmlFixTables = [
+    ['admins', ['name', 'username']],
+    ['rooms', ['guest_name', 'notes']],
+    ['transactions', ['description', 'category']],
+    ['bookings', ['guest_name', 'guest_phone', 'notes']],
+    ['shifts', ['notes']],
+  ];
+  for (const [table, cols] of htmlFixTables) {
+    for (const col of cols) {
+      try {
+        db.prepare(`UPDATE ${table} SET ${col} = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${col}, '&#39;', ''''), '&quot;', '"'), '&lt;', ''), '&gt;', ''), '&amp;', '&') WHERE ${col} LIKE '%&%'`).run();
+      } catch (e) {
+        // ignore if table/column doesn't exist
+      }
+    }
+  }
+
   db.close();
 }
 
