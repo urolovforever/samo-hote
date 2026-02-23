@@ -17,6 +17,9 @@ import {
   AlertCircle,
   Bell,
   Info,
+  LogOut as CheckOutIcon,
+  User,
+  Phone,
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -42,6 +45,15 @@ export default function Dashboard() {
   }, [transactions])
 
   const occupancyRate = rooms.length > 0 ? Math.round((occupied / rooms.length) * 100) : 0
+
+  // Today's checkout rooms - detailed data for the section
+  const { todayCheckoutRooms, overdueCheckoutRooms } = useMemo(() => {
+    const today = todayTashkent()
+    return {
+      todayCheckoutRooms: rooms.filter(r => r.status === 'occupied' && r.checkOut === today),
+      overdueCheckoutRooms: rooms.filter(r => r.status === 'occupied' && r.checkOut && r.checkOut < today),
+    }
+  }, [rooms])
 
   // Notifications
   const notifications = useMemo(() => {
@@ -134,6 +146,99 @@ export default function Dashboard() {
               </button>
             )
           })}
+        </div>
+      )}
+
+      {/* Today's checkouts section */}
+      {(todayCheckoutRooms.length > 0 || overdueCheckoutRooms.length > 0) && (
+        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <CheckOutIcon className="w-4 h-4 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white/80">Bugun chiqadiganlar</h3>
+                <p className="text-[10px] text-white/30">{todayCheckoutRooms.length + overdueCheckoutRooms.length} ta xona</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/rooms')}
+              className="text-amber-400/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors"
+            >
+              Xonalar <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {/* Overdue rooms first (red) */}
+            {overdueCheckoutRooms.map(room => (
+              <div
+                key={room.id}
+                onClick={() => navigate('/rooms')}
+                className="flex items-center gap-3 bg-red-500/5 border border-red-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-red-500/10 transition-colors"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-red-400">{room.number}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3 h-3 text-red-400/60 shrink-0" />
+                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    {room.guestPhone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="w-2.5 h-2.5 text-white/20" />
+                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                      </div>
+                    )}
+                    <span className="text-[10px] text-red-400 font-medium">
+                      Muddati o'tgan: {room.checkOut ? formatDateTashkent(room.checkOut) : ''}
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-2 py-1 shrink-0">
+                  <span className="text-[10px] font-semibold text-red-400">KECHIKKAN</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Today's checkout rooms (amber) */}
+            {todayCheckoutRooms.map(room => (
+              <div
+                key={room.id}
+                onClick={() => navigate('/rooms')}
+                className="flex items-center gap-3 bg-amber-500/5 border border-amber-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-amber-500/10 transition-colors"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-amber-400">{room.number}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3 h-3 text-amber-400/60 shrink-0" />
+                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    {room.guestPhone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="w-2.5 h-2.5 text-white/20" />
+                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                      </div>
+                    )}
+                    {room.checkIn && (
+                      <span className="text-[10px] text-white/30">
+                        Kirgan: {formatDateTashkent(room.checkIn)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 shrink-0">
+                  <span className="text-[10px] font-semibold text-amber-400">BUGUN</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
