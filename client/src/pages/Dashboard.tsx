@@ -295,7 +295,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
         <StatCard icon={DoorOpen} label="Bo'sh" value={available} color="emerald" onClick={() => navigate('/rooms')} />
         <StatCard icon={BedDouble} label="Band" value={occupied} color="blue" onClick={() => navigate('/rooms')} />
         <StatCard icon={TrendingUp} label="Bugungi kirim" value={formatUZS(todayIncome)} color="amber" onClick={() => navigate('/finance')} />
@@ -303,9 +303,9 @@ export default function Dashboard() {
       </div>
 
       {/* Occupancy + Current Shift */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Occupancy */}
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6">
+        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
           <h3 className="text-sm font-medium text-white/50 mb-4">Bandlik darajasi</h3>
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
             <div className="relative w-28 h-28">
@@ -339,7 +339,7 @@ export default function Dashboard() {
         </div>
 
         {/* Current shift / Active shifts */}
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6">
+        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-white/50">
               {admin?.role === 'super_admin' ? 'Faol smenalar' : 'Joriy smena'}
@@ -403,13 +403,13 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
-                  <p className="text-[10px] text-emerald-400/60 uppercase tracking-wider mb-1">Kirim</p>
-                  <p className="text-lg font-bold text-emerald-400">{formatUZS(currentShift.totalIncome)}</p>
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2.5 sm:p-3">
+                  <p className="text-[9px] sm:text-[10px] text-emerald-400/60 uppercase tracking-wider mb-0.5 sm:mb-1">Kirim</p>
+                  <p className="text-sm sm:text-lg font-bold text-emerald-400 truncate">{formatUZS(currentShift.totalIncome)}</p>
                 </div>
-                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3">
-                  <p className="text-[10px] text-red-400/60 uppercase tracking-wider mb-1">Chiqim</p>
-                  <p className="text-lg font-bold text-red-400">{formatUZS(currentShift.totalExpense)}</p>
+                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-2.5 sm:p-3">
+                  <p className="text-[9px] sm:text-[10px] text-red-400/60 uppercase tracking-wider mb-0.5 sm:mb-1">Chiqim</p>
+                  <p className="text-sm sm:text-lg font-bold text-red-400 truncate">{formatUZS(currentShift.totalExpense)}</p>
                 </div>
               </div>
             </div>
@@ -420,8 +420,8 @@ export default function Dashboard() {
       </div>
 
       {/* Room floor map */}
-      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6">
-        <div className="flex items-center justify-between mb-5">
+      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
           <h3 className="text-sm font-medium text-white/50">Xonalar xaritasi</h3>
           <button
             onClick={() => navigate('/rooms')}
@@ -431,19 +431,19 @@ export default function Dashboard() {
           </button>
         </div>
         {[4, 3, 2].map(floor => (
-          <div key={floor} className="mb-4 last:mb-0">
+          <div key={floor} className="mb-3 sm:mb-4 last:mb-0">
             <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2">{floor}-qavat</p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
               {rooms.filter(r => r.floor === floor).map(room => {
                 const sc = statusColors[room.status]
                 return (
                   <div
                     key={room.id}
-                    className={`${sc.bg} border ${sc.border} rounded-xl px-4 py-2.5 min-w-[80px] text-center cursor-pointer hover:scale-105 transition-transform`}
+                    className={`${sc.bg} border ${sc.border} rounded-lg sm:rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 sm:min-w-[80px] text-center cursor-pointer hover:scale-105 transition-transform`}
                     onClick={() => navigate('/rooms')}
                   >
-                    <p className={`font-bold text-sm ${sc.text}`}>{room.number}</p>
-                    <p className="text-[9px] text-white/30 mt-0.5">
+                    <p className={`font-bold text-xs sm:text-sm ${sc.text}`}>{room.number}</p>
+                    <p className="text-[8px] sm:text-[9px] text-white/30 mt-0.5 truncate">
                       {room.status === 'available' && "Bo'sh"}
                       {room.status === 'occupied' && 'Band'}
                       {room.status === 'cleaning' && 'Tozalanmoqda'}
@@ -460,7 +460,7 @@ export default function Dashboard() {
 
       {/* Recent transactions */}
       {transactions.length > 0 && (
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-6">
+        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-white/50">So'nggi operatsiyalar</h3>
             <button
@@ -470,27 +470,27 @@ export default function Dashboard() {
               Barchasini ko'rish <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {transactions.slice(0, 5).map(tx => (
-              <div key={tx.id} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
-                  }`}>
-                    {tx.type === 'income' ? (
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <TrendingDown className="w-4 h-4 text-red-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium truncate">{tx.description}</p>
-                    <p className="text-[11px] text-white/25 truncate">{tx.category} • {tx.admin}</p>
-                  </div>
+              <div key={tx.id} className="flex items-center gap-2.5 sm:gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                }`}>
+                  {tx.type === 'income' ? (
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-red-400" />
+                  )}
                 </div>
-                <span className={`font-semibold text-sm ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[13px] sm:text-sm font-medium truncate">{tx.description}</p>
+                    <span className={`font-semibold text-[13px] sm:text-sm shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
+                    </span>
+                  </div>
+                  <p className="text-[10px] sm:text-[11px] text-white/25 truncate">{tx.category} <span className="hidden sm:inline">• {tx.admin}</span></p>
+                </div>
               </div>
             ))}
           </div>
@@ -523,13 +523,13 @@ function StatCard({ icon: Icon, label, value, color, onClick }: {
   return (
     <button
       onClick={onClick}
-      className={`bg-gradient-to-br ${colorMap[color]} border rounded-2xl p-4 md:p-5 text-left hover:scale-[1.02] transition-transform`}
+      className={`bg-gradient-to-br ${colorMap[color]} border rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 text-left hover:scale-[1.02] transition-transform overflow-hidden`}
     >
-      <div className={`w-9 h-9 rounded-xl ${iconColorMap[color]} flex items-center justify-center mb-3`}>
-        <Icon className="w-[18px] h-[18px]" />
+      <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl ${iconColorMap[color]} flex items-center justify-center mb-2 sm:mb-3`}>
+        <Icon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
       </div>
-      <p className="text-[10px] text-white/35 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-base sm:text-xl font-bold text-white">{value}</p>
+      <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-wider mb-0.5 sm:mb-1">{label}</p>
+      <p className="text-sm sm:text-base md:text-xl font-bold text-white truncate">{value}</p>
     </button>
   )
 }
