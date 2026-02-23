@@ -135,7 +135,7 @@ export default function Dashboard() {
 
       {/* Notifications */}
       {notifications.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {notifications.map((notif, i) => {
             const ns = notifStyles[notif.type]
             const NIcon = ns.icon
@@ -143,10 +143,10 @@ export default function Dashboard() {
               <button
                 key={i}
                 onClick={() => navigate(notif.path)}
-                className={`w-full flex items-center gap-3 ${ns.bg} border ${ns.border} rounded-xl px-4 py-3 text-left hover:scale-[1.01] transition-transform`}
+                className={`w-full flex items-center gap-2.5 sm:gap-3 ${ns.bg} border ${ns.border} rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:scale-[1.01] transition-transform`}
               >
                 <NIcon className={`w-4 h-4 ${ns.text} shrink-0`} />
-                <span className={`text-sm ${ns.text} font-medium line-clamp-2`}>{notif.message}</span>
+                <span className={`text-xs sm:text-sm ${ns.text} font-medium line-clamp-2`}>{notif.message}</span>
                 <ArrowRight className={`w-3.5 h-3.5 ${ns.text} ml-auto shrink-0 opacity-50`} />
               </button>
             )
@@ -155,16 +155,16 @@ export default function Dashboard() {
       )}
 
       {/* Today's checkouts section - always visible */}
-      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-3 sm:p-6">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 ${
               overdueCheckoutRooms.length > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'
             }`}>
-              <CheckOutIcon className={`w-4 h-4 ${overdueCheckoutRooms.length > 0 ? 'text-red-400' : 'text-amber-400'}`} />
+              <CheckOutIcon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${overdueCheckoutRooms.length > 0 ? 'text-red-400' : 'text-amber-400'}`} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white/80">Chiqishlar</h3>
+              <h3 className="text-[13px] sm:text-sm font-semibold text-white/80">Chiqishlar</h3>
               <p className="text-[10px] text-white/30">
                 {overdueCheckoutRooms.length + todayCheckoutRooms.length + tomorrowCheckoutRooms.length > 0
                   ? `${overdueCheckoutRooms.length + todayCheckoutRooms.length + tomorrowCheckoutRooms.length} ta xona`
@@ -187,36 +187,36 @@ export default function Dashboard() {
             <p className="text-xs text-white/25">Bugun va ertaga chiqadigan mehmonlar yo'q</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             {/* Overdue rooms first (red) */}
             {overdueCheckoutRooms.map(room => (
               <div
                 key={room.id}
                 onClick={() => navigate('/rooms')}
-                className="flex items-center gap-3 bg-red-500/5 border border-red-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-red-500/10 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 bg-red-500/5 border border-red-500/15 rounded-xl px-2.5 sm:px-4 py-2.5 sm:py-3 cursor-pointer hover:bg-red-500/10 transition-colors"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-red-400">{room.number}</span>
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-xs sm:text-base font-bold text-red-400">{room.number}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <User className="w-3 h-3 text-red-400/60 shrink-0" />
-                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
                   </div>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 flex-wrap">
                     {room.guestPhone && (
                       <div className="flex items-center gap-1">
                         <Phone className="w-2.5 h-2.5 text-white/20" />
-                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                        <span className="text-[9px] sm:text-[10px] text-white/30">{room.guestPhone}</span>
                       </div>
                     )}
-                    <span className="text-[10px] text-red-400 font-medium">
+                    <span className="text-[9px] sm:text-[10px] text-red-400 font-medium">
                       Muddati o'tgan: {room.checkOut ? formatDateTashkent(room.checkOut) : ''}
                     </span>
                   </div>
                 </div>
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-2 py-1 shrink-0">
-                  <span className="text-[10px] font-semibold text-red-400">KECHIKKAN</span>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 shrink-0">
+                  <span className="text-[8px] sm:text-[10px] font-semibold text-red-400">KECHIKKAN</span>
                 </div>
               </div>
             ))}
@@ -226,32 +226,32 @@ export default function Dashboard() {
               <div
                 key={room.id}
                 onClick={() => navigate('/rooms')}
-                className="flex items-center gap-3 bg-amber-500/5 border border-amber-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 bg-amber-500/5 border border-amber-500/15 rounded-xl px-2.5 sm:px-4 py-2.5 sm:py-3 cursor-pointer hover:bg-amber-500/10 transition-colors"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-amber-400">{room.number}</span>
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-xs sm:text-base font-bold text-amber-400">{room.number}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <User className="w-3 h-3 text-amber-400/60 shrink-0" />
-                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
                   </div>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 flex-wrap">
                     {room.guestPhone && (
                       <div className="flex items-center gap-1">
                         <Phone className="w-2.5 h-2.5 text-white/20" />
-                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                        <span className="text-[9px] sm:text-[10px] text-white/30">{room.guestPhone}</span>
                       </div>
                     )}
                     {room.checkIn && (
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[9px] sm:text-[10px] text-white/30">
                         Kirgan: {formatDateTashkent(room.checkIn)}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 shrink-0">
-                  <span className="text-[10px] font-semibold text-amber-400">BUGUN</span>
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 shrink-0">
+                  <span className="text-[8px] sm:text-[10px] font-semibold text-amber-400">BUGUN</span>
                 </div>
               </div>
             ))}
@@ -261,32 +261,32 @@ export default function Dashboard() {
               <div
                 key={room.id}
                 onClick={() => navigate('/rooms')}
-                className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-blue-500/10 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 bg-blue-500/5 border border-blue-500/15 rounded-xl px-2.5 sm:px-4 py-2.5 sm:py-3 cursor-pointer hover:bg-blue-500/10 transition-colors"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <span className="text-sm sm:text-base font-bold text-blue-400">{room.number}</span>
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-xs sm:text-base font-bold text-blue-400">{room.number}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <User className="w-3 h-3 text-blue-400/60 shrink-0" />
-                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
                   </div>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 flex-wrap">
                     {room.guestPhone && (
                       <div className="flex items-center gap-1">
                         <Phone className="w-2.5 h-2.5 text-white/20" />
-                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                        <span className="text-[9px] sm:text-[10px] text-white/30">{room.guestPhone}</span>
                       </div>
                     )}
                     {room.checkIn && (
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[9px] sm:text-[10px] text-white/30">
                         Kirgan: {formatDateTashkent(room.checkIn)}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2 py-1 shrink-0">
-                  <span className="text-[10px] font-semibold text-blue-400">ERTAGA</span>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 shrink-0">
+                  <span className="text-[8px] sm:text-[10px] font-semibold text-blue-400">ERTAGA</span>
                 </div>
               </div>
             ))}
@@ -353,33 +353,33 @@ export default function Dashboard() {
           </div>
           {admin?.role === 'super_admin' ? (
             activeShifts.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {activeShifts.map(s => (
-                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-xs font-bold">
+                  <div key={s.id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2.5 sm:p-3 space-y-2">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0">
                         {s.admin.split(' ').map(w => w[0]).join('')}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{s.admin}</p>
-                        <div className="flex items-center gap-1.5 text-white/30 text-[11px]">
-                          <Clock className="w-3 h-3" />
-                          {formatTimeTashkent(s.startTime)} dan boshlab
-                          <span className="ml-auto flex items-center gap-1">
+                        <p className="text-[13px] sm:text-sm font-medium truncate">{s.admin}</p>
+                        <div className="flex items-center gap-1.5 text-white/30 text-[10px] sm:text-[11px]">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{formatTimeTashkent(s.startTime)} dan boshlab</span>
+                          <span className="ml-auto flex items-center gap-1 shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             <span className="text-emerald-400/70">Faol</span>
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-black/20 rounded-lg p-2 text-center">
-                        <p className="text-[9px] text-emerald-400/50 uppercase">Kirim</p>
-                        <p className="text-sm font-bold text-emerald-400">{formatUZS(s.totalIncome)}</p>
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                      <div className="bg-black/20 rounded-lg p-1.5 sm:p-2 text-center overflow-hidden">
+                        <p className="text-[8px] sm:text-[9px] text-emerald-400/50 uppercase">Kirim</p>
+                        <p className="text-xs sm:text-sm font-bold text-emerald-400 truncate">{formatUZS(s.totalIncome)}</p>
                       </div>
-                      <div className="bg-black/20 rounded-lg p-2 text-center">
-                        <p className="text-[9px] text-red-400/50 uppercase">Chiqim</p>
-                        <p className="text-sm font-bold text-red-400">{formatUZS(s.totalExpense)}</p>
+                      <div className="bg-black/20 rounded-lg p-1.5 sm:p-2 text-center overflow-hidden">
+                        <p className="text-[8px] sm:text-[9px] text-red-400/50 uppercase">Chiqim</p>
+                        <p className="text-xs sm:text-sm font-bold text-red-400 truncate">{formatUZS(s.totalExpense)}</p>
                       </div>
                     </div>
                   </div>
@@ -389,27 +389,27 @@ export default function Dashboard() {
               <p className="text-white/20 text-sm">Hozirda faol smena yo'q</p>
             )
           ) : currentShift ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-sm font-bold">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-xs sm:text-sm font-bold shrink-0">
                   {currentShift.admin.split(' ').map(w => w[0]).join('')}
                 </div>
-                <div>
-                  <p className="font-medium">{currentShift.admin}</p>
-                  <div className="flex items-center gap-1.5 text-white/30 text-xs">
-                    <Clock className="w-3 h-3" />
-                    {formatTimeTashkent(currentShift.startTime)} dan boshlab
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{currentShift.admin}</p>
+                  <div className="flex items-center gap-1.5 text-white/30 text-[11px] sm:text-xs">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span>{formatTimeTashkent(currentShift.startTime)} dan boshlab</span>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2.5 sm:p-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2.5 sm:p-3 overflow-hidden">
                   <p className="text-[9px] sm:text-[10px] text-emerald-400/60 uppercase tracking-wider mb-0.5 sm:mb-1">Kirim</p>
-                  <p className="text-sm sm:text-lg font-bold text-emerald-400 truncate">{formatUZS(currentShift.totalIncome)}</p>
+                  <p className="text-xs sm:text-lg font-bold text-emerald-400 truncate">{formatUZS(currentShift.totalIncome)}</p>
                 </div>
-                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-2.5 sm:p-3">
+                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-2.5 sm:p-3 overflow-hidden">
                   <p className="text-[9px] sm:text-[10px] text-red-400/60 uppercase tracking-wider mb-0.5 sm:mb-1">Chiqim</p>
-                  <p className="text-sm sm:text-lg font-bold text-red-400 truncate">{formatUZS(currentShift.totalExpense)}</p>
+                  <p className="text-xs sm:text-lg font-bold text-red-400 truncate">{formatUZS(currentShift.totalExpense)}</p>
                 </div>
               </div>
             </div>
@@ -420,9 +420,9 @@ export default function Dashboard() {
       </div>
 
       {/* Room floor map */}
-      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-5">
-          <h3 className="text-sm font-medium text-white/50">Xonalar xaritasi</h3>
+      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-3 sm:p-6">
+        <div className="flex items-center justify-between mb-3 sm:mb-5">
+          <h3 className="text-[13px] sm:text-sm font-medium text-white/50">Xonalar xaritasi</h3>
           <button
             onClick={() => navigate('/rooms')}
             className="text-amber-400/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors"
@@ -460,8 +460,8 @@ export default function Dashboard() {
 
       {/* Recent transactions */}
       {transactions.length > 0 && (
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-3 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h3 className="text-sm font-medium text-white/50">So'nggi operatsiyalar</h3>
             <button
               onClick={() => navigate('/finance')}
@@ -470,22 +470,22 @@ export default function Dashboard() {
               Barchasini ko'rish <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5 sm:space-y-1">
             {transactions.slice(0, 5).map(tx => (
-              <div key={tx.id} className="flex items-center gap-2.5 sm:gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+              <div key={tx.id} className="flex items-center gap-2 sm:gap-3 py-2 sm:py-2.5 border-b border-white/[0.04] last:border-0">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                   tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'
                 }`}>
                   {tx.type === 'income' ? (
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                   ) : (
-                    <TrendingDown className="w-4 h-4 text-red-400" />
+                    <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[13px] sm:text-sm font-medium truncate">{tx.description}</p>
-                    <span className={`font-semibold text-[13px] sm:text-sm shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <p className="text-xs sm:text-sm font-medium truncate">{tx.description}</p>
+                    <span className={`font-semibold text-xs sm:text-sm shrink-0 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {tx.type === 'income' ? '+' : '-'}{formatUZS(tx.amount)}
                     </span>
                   </div>
