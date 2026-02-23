@@ -9,6 +9,7 @@ interface DataContextType {
   transactions: Transaction[]
   shifts: ShiftLog[]
   bookings: Booking[]
+  activeShifts: ShiftLog[]
   loading: boolean
   updateRoom: (roomId: string, updates: Partial<Room>) => Promise<void>
   addTransaction: (tx: Omit<Transaction, 'id' | 'admin' | 'shift'>) => Promise<void>
@@ -93,21 +94,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [shifts, setShifts] = useState<ShiftLog[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [activeShifts, setActiveShifts] = useState<ShiftLog[]>([])
   const [loading, setLoading] = useState(true)
 
   const refreshData = useCallback(async () => {
     if (!admin) return
     try {
-      const [roomsData, txData, shiftsData, bookingsData] = await Promise.all([
+      const [roomsData, txData, shiftsData, bookingsData, activeShiftsData] = await Promise.all([
         api.getRooms(),
         api.getTransactions(),
         api.getShifts(),
         api.getBookings(),
+        api.getActiveShifts(),
       ])
       setRooms(roomsData.map(mapRoom))
       setTransactions(txData.map(mapTransaction))
       setShifts(shiftsData.filter((s: any) => s.closed).map(mapShift))
       setBookings(bookingsData.map(mapBooking))
+      setActiveShifts(activeShiftsData.map(mapShift))
 
       // Sync current shift totals from server data
       if (currentShift) {
@@ -364,7 +368,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      rooms, transactions, shifts, bookings, loading,
+      rooms, transactions, shifts, bookings, activeShifts, loading,
       updateRoom, addTransaction, deleteTransaction, editTransaction,
       addBooking, updateBooking, cancelBooking, checkInFromBooking, closeShift, refreshData,
     }}>
