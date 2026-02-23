@@ -47,11 +47,16 @@ export default function Dashboard() {
   const occupancyRate = rooms.length > 0 ? Math.round((occupied / rooms.length) * 100) : 0
 
   // Today's checkout rooms - detailed data for the section
-  const { todayCheckoutRooms, overdueCheckoutRooms } = useMemo(() => {
+  const { todayCheckoutRooms, overdueCheckoutRooms, tomorrowCheckoutRooms } = useMemo(() => {
     const today = todayTashkent()
+    // Tomorrow
+    const t = new Date()
+    t.setDate(t.getDate() + 1)
+    const tomorrow = t.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' })
     return {
       todayCheckoutRooms: rooms.filter(r => r.status === 'occupied' && r.checkOut === today),
       overdueCheckoutRooms: rooms.filter(r => r.status === 'occupied' && r.checkOut && r.checkOut < today),
+      tomorrowCheckoutRooms: rooms.filter(r => r.status === 'occupied' && r.checkOut === tomorrow),
     }
   }, [rooms])
 
@@ -149,27 +154,39 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Today's checkouts section */}
-      {(todayCheckoutRooms.length > 0 || overdueCheckoutRooms.length > 0) && (
-        <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                <CheckOutIcon className="w-4 h-4 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white/80">Bugun chiqadiganlar</h3>
-                <p className="text-[10px] text-white/30">{todayCheckoutRooms.length + overdueCheckoutRooms.length} ta xona</p>
-              </div>
+      {/* Today's checkouts section - always visible */}
+      <div className="bg-[#161923] rounded-2xl border border-white/[0.06] p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+              overdueCheckoutRooms.length > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'
+            }`}>
+              <CheckOutIcon className={`w-4 h-4 ${overdueCheckoutRooms.length > 0 ? 'text-red-400' : 'text-amber-400'}`} />
             </div>
-            <button
-              onClick={() => navigate('/rooms')}
-              className="text-amber-400/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors"
-            >
-              Xonalar <ArrowRight className="w-3 h-3" />
-            </button>
+            <div>
+              <h3 className="text-sm font-semibold text-white/80">Chiqishlar</h3>
+              <p className="text-[10px] text-white/30">
+                {overdueCheckoutRooms.length + todayCheckoutRooms.length + tomorrowCheckoutRooms.length > 0
+                  ? `${overdueCheckoutRooms.length + todayCheckoutRooms.length + tomorrowCheckoutRooms.length} ta xona`
+                  : 'Hozircha yo\'q'
+                }
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate('/rooms')}
+            className="text-amber-400/70 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors"
+          >
+            Xonalar <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
 
+        {overdueCheckoutRooms.length === 0 && todayCheckoutRooms.length === 0 && tomorrowCheckoutRooms.length === 0 ? (
+          <div className="text-center py-4">
+            <CheckOutIcon className="w-8 h-8 text-white/10 mx-auto mb-2" />
+            <p className="text-xs text-white/25">Bugun va ertaga chiqadigan mehmonlar yo'q</p>
+          </div>
+        ) : (
           <div className="space-y-2">
             {/* Overdue rooms first (red) */}
             {overdueCheckoutRooms.map(room => (
@@ -238,9 +255,44 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+
+            {/* Tomorrow's checkout rooms (blue) */}
+            {tomorrowCheckoutRooms.map(room => (
+              <div
+                key={room.id}
+                onClick={() => navigate('/rooms')}
+                className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/15 rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:bg-blue-500/10 transition-colors"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm sm:text-base font-bold text-blue-400">{room.number}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3 h-3 text-blue-400/60 shrink-0" />
+                    <p className="text-sm font-medium text-white/80 truncate">{room.guestName || '-'}</p>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    {room.guestPhone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="w-2.5 h-2.5 text-white/20" />
+                        <span className="text-[10px] text-white/30">{room.guestPhone}</span>
+                      </div>
+                    )}
+                    {room.checkIn && (
+                      <span className="text-[10px] text-white/30">
+                        Kirgan: {formatDateTashkent(room.checkIn)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2 py-1 shrink-0">
+                  <span className="text-[10px] font-semibold text-blue-400">ERTAGA</span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
